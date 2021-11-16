@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>infoTV</title>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Comfortaa" />
+
+ 
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+            background: #212121;
+            color: #212121;
+            height: 100vh;
+        }
+
+        iframe {
+            width: 100%;
+            height: calc(100vh + 30px);
+        }
+
+        #datetime {
+            font-family: Comfortaa, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 2em;
+            position: absolute;
+            padding-top: 25px;
+            background: none;
+            color: white;
+            top: 0px;
+            width: 100%;
+            text-align: center;
+            vertical-align: center;
+        }
+
+        
+    </style>
+
+    <script>
+        function kello() {
+            var dt = new Date();
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            console.log(new Intl.DateTimeFormat('fi-FI', options).format(dt));
+            document.getElementById("datetime").innerHTML = "Infotv " + (new Intl.DateTimeFormat('fi-FI', options).format(dt));
+            var t = setTimeout(kello, 10);
+        };
+
+        window.setInterval(function () {
+            reloadIFrame()
+        }, 8000*30); //8 sekuntia (yhden kesto), max 30 slide
+
+        function reloadIFrame() {
+            var aifreim = document.getElementById('iframe');
+            var dt = new(Date);
+            var hore = dt.getHours();
+            if (hore < 16) {
+                aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000";
+            } else {
+                aifreim.src = 'https://docs.google.com/presentation/d/e/2PACX-1vQailvayK_TUNKtFmV1n72SdhrPX0yyuvGLOMw6TbeEGbA-i0BcpnOED-mUvymxw9XCL8SPLvdqamR-/embed?start=true&loop=true&delayms=8000';
+            }
+        }
+    </script>
+</head>
+
+<body onLoad="kello()">
+     <div id="datetime"></div>
+    <iframe id="iframe"
+        src="https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=10000" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>"
+        >
+</body>
+
+</html>
