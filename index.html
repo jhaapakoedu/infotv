@@ -11,12 +11,13 @@
             overflow: hidden;
             background: #212121;
             color: #212121;
-            height: 100vh;
+           /* height: 100vh;*/
         }
 
         iframe {
-            width: 100%;
+         /*   width: 100%;
             height: calc(100vh + 30px);
+        */
         }
 
         #datetime {
@@ -46,7 +47,7 @@
 
         window.setInterval(function () {
             reloadIFrame()
-        }, 8000*1); //8 sekuntia (yhden kesto), max 30 slide
+        }, 8000*5); //8 sekuntia (yhden kesto), max 30 slide
 
         function reloadIFrame() {
             var aifreim = document.getElementById('iframe');
