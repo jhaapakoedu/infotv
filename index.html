@@ -40,7 +40,7 @@
             var dt = new Date();
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
             console.log(new Intl.DateTimeFormat('fi-FI', options).format(dt));
-            document.getElementById("datetime").innerHTML = "Infotv " + (new Intl.DateTimeFormat('fi-FI', options).format(dt));
+            document.getElementById("datetime").innerHTML = "InfoTV " + (new Intl.DateTimeFormat('fi-FI', options).format(dt));
             var t = setTimeout(kello, 10);
         };
 
