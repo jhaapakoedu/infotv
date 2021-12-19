@@ -34,6 +34,14 @@
             vertical-align: center;
         }
 
+        #shekkaus {
+            font-size: 4px;
+            background: none;
+            color: white;
+	    position: absolute;
+  	    bottom: 1px;
+            right: 1px;
+        }
         
     </style>
 
@@ -49,6 +57,17 @@
         window.setInterval(function () {
             reloadIFrame()
         }, 8000*30); //8 sekuntia (yhden kesto), max 30 slide
+
+        window.setInterval(function () { onkoKouluLoppu() }, 1000);
+
+	    function onkoKouluLoppu() {
+  		    var d = new Date();
+  		    if (d.getHours()>16) {
+			    window.location.replace("video.html")
+		    } else {
+			    document.getElementById("shekkaus").innerHTML = "Vielä hetki";
+		    } 
+	}
 
         function reloadIFrame() {
             var aifreim = document.getElementById('iframe');
@@ -68,6 +87,7 @@
     <iframe id="iframe"
         src="https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=10000" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>"
         >
+    <div id="shekkaus"></div>
 </body>
 
 </html>
