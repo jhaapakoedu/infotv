@@ -40,9 +40,10 @@
     <script>
         function kello() {
             var dt = new Date();
-            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            //var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            var options = { weekday: 'short', year: '2-digit', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'};//, second: 'numeric' };
             console.log(new Intl.DateTimeFormat('fi-FI', options).format(dt));
-            document.getElementById("datetime").innerHTML = "InfoTV " + (new Intl.DateTimeFormat('fi-FI', options).format(dt));
+            document.getElementById("datetime").innerHTML = (new Intl.DateTimeFormat('fi-FI', options).format(dt));
             var t = setTimeout(kello, 10);
         };
 
@@ -54,11 +55,12 @@
             var aifreim = document.getElementById('iframe');
             var dt = new(Date);
             var hore = dt.getHours();
-            if (hore < 16) {
+           /* if (hore < 16) {
                 aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000";
             } else {
                 aifreim.src = 'https://docs.google.com/presentation/d/e/2PACX-1vQailvayK_TUNKtFmV1n72SdhrPX0yyuvGLOMw6TbeEGbA-i0BcpnOED-mUvymxw9XCL8SPLvdqamR-/embed?start=true&loop=true&delayms=8000';
-            }
+            }*/
+            aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000";
         }
     </script>
 </head>
