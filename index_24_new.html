@@ -55,12 +55,14 @@
             var aifreim = document.getElementById('iframe');
             var dt = new(Date);
             var hore = dt.getHours();
+            aifreim.src = "https://calendar.google.com/calendar/u/0/embed?height=600&wkst=2&ctz=Europe/Helsinki&bgcolor=%23ffffff&showTitle=0&showNav=0&mode=AGENDA&showPrint=0&showTabs=0&showCalendars=0&showTz=0&showDate=0&src=Y184Y2UxNWI3NjA3ZDY3NGI3NTYxZWYzM2MxODJhOGQzNzAxNzNiZDJjMDQwNGZlMWJmN2E4ODdlNzhjNDVjZThlQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23039BE5&color=%23C0CA33&color=%23795548%22+style%3D%22border-width:0%22+width%3D%22800%22+height%3D%22600%22+frameborder%3D%220%22+scrolling%3D%22no%22&dates=20240916/20240922";
+
            /* if (hore < 16) {
                 aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000";
             } else {
                 aifreim.src = 'https://docs.google.com/presentation/d/e/2PACX-1vQailvayK_TUNKtFmV1n72SdhrPX0yyuvGLOMw6TbeEGbA-i0BcpnOED-mUvymxw9XCL8SPLvdqamR-/embed?start=true&loop=true&delayms=8000';
             }*/
-            aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000";
+            setTimeout(aifreim.src = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=8000", 1000);
         }
     </script>
 </head>
