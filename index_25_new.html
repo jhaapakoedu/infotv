@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>infoTV</title>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Comfortaa" />
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #212121;
+            color: white;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        iframe {
+            width: 100vw;
+            height: calc(100vh - 40px);
+            border: none;
+        }
+
+        #datetime {
+            font-family: Comfortaa, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.5em;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 5px 0;
+            background: black;
+            color: white;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        var slidenkesto = 12000;
+        var sivusto = "https://docs.google.com/presentation/d/e/2PACX-1vTTPQNMx4E_XdLqaz0mCfbGoKkJ4-UY0Dy8gTFZ0uf6Vps_Fbf3-iRvGSQKtQ31N33GvOAOlAmB7azq/embed?start=true&loop=true&delayms=" + slidenkesto;
+
+        function kello() {
+            var dt = new Date();
+            var options = { weekday: 'short', year: '2-digit', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+            document.getElementById("datetime").innerHTML = new Intl.DateTimeFormat('fi-FI', options).format(dt);
+            setTimeout(kello, 1000);
+        }
+
+        function reloadIFrame() {
+            document.getElementById('iframe').src = sivusto;
+        }
+
+        window.onload = function () {
+            kello();
+            reloadIFrame();
+            setInterval(reloadIFrame, slidenkesto * 30);
+        };
+    </script>
+</head>
+
+<body>
+    <div id="datetime"></div>
+    <iframe id="iframe" allowfullscreen mozallowfullscreen webkitallowfullscreen></iframe>
+</body>
+</html>
