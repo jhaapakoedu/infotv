@@ -5,7 +5,7 @@
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Comfortaa" />
 
     <style>
-        body {
+        body,html {
             margin: 0;
             overflow: hidden;
             background: #212121;
@@ -17,10 +17,11 @@
         iframe {
             font-size: 1.5em;
             position: absolute; 
-            top: 0em;
+            top: 1.5em;
             width: 100vw;
             height: calc(100vh + 40px);
             border: none;
+            overflow: hidden;
         }
 
         #datetime {
@@ -58,6 +59,13 @@
             reloadIFrame();
             setInterval(reloadIFrame, slidenkesto * 30);
         };
+        document.body.addEventListener('touchmove', function(e){
+    e.preventDefault();
+}, { passive: false });
+document.body.style.overflow = 'hidden';
+document.body.addEventListener('scroll', function(e){
+    e.preventDefault();
+});
     </script>
 </head>
 
