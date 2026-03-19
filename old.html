@@ -58,15 +58,11 @@
     .content { 
       background: rgba(30, 41, 59, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.05);
-      margin: 0 auto; padding: 70px 90px; border-radius: 24px; width: 88%; max-width: 1700px; 
+      margin: 0 auto; padding: 60px 90px; border-radius: 24px; width: 88%; max-width: 1700px; 
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
     
-    h1 { 
-      font-size: 2.8rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; 
-      color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.1); 
-      padding-bottom: 25px; margin-bottom: 50px; 
-    }
+    h1 { display: none; }
 
     /* RUOKALISTA */
     .menu-grid { display: flex; justify-content: space-between; }
@@ -82,7 +78,11 @@
     
     /* KALENTERI */
     .cal-day-group { margin-bottom: 40px; }
-    .cal-date-header { font-size: 1.17rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; }
+    .cal-date-header { font-size: 1.17rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 8px; display: inline-block; }
+    
+    /* Tänään korostus */
+    .cal-date-header.today-header { color: #f8fafc; font-weight: 700; border-bottom: 2px solid #38bdf8; }
+    
     .cal-event-row { display: flex; align-items: baseline; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .cal-event-row:last-child { border-bottom: none; padding-bottom: 0; }
     .cal-time { font-size: 1.62rem; font-weight: 500; color: #f8fafc; width: 140px; flex-shrink: 0; } 
@@ -91,7 +91,7 @@
     .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: #000; }
     iframe { width: 100%; height: 100%; border: none; }
     
-    /* PALLOT UUDELLA TYYLILLÄ */
+    /* PALLOT */
     #pagination {
       position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
       display: flex; justify-content: center; z-index: 1000;
@@ -123,8 +123,6 @@
     var currentStep = 0;
     var timer = null;
     var slideCountId = 1;
-    var iframeCreated = false;
-    var gasData = null; // Tallennetaan GASin hidas vastaus tänne
 
     function updateClock() {
       var now = new Date();
@@ -132,6 +130,11 @@
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
       var h = now.getHours(); var m = now.getMinutes();
       document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+
+      // Yöllinen uudelleenlataus (Klo 02:00)
+      if (h === 2 && m === 0 && now.getSeconds() < 2) {
+        window.location.reload(true);
+      }
     }
     setInterval(updateClock, 1000); updateClock();
 
@@ -150,15 +153,15 @@
       xhr.send();
     }
 
-    function createSlideHtml(title, htmlContent) {
+    function createSlideHtml(htmlContent) {
       var id = 'slide-gen-' + slideCountId;
       var container = document.getElementById('slides-container');
-      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '"><div class="content"><h1>' + title + '</h1>' + (htmlContent || '<div class="empty-menu">Ei sisältöä.</div>') + '</div></div>');
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '"><div class="content">' + (htmlContent || '<div class="empty-menu">Ei sisältöä.</div>') + '</div></div>');
       timeline.push({ id: id, duration: INFO_DURATION, type: 'info' });
       slideCountId++;
     }
 
-    // --- RUOKALISTA (LYHENNETTY) ---
+    // --- RUOKALISTA ---
     function formatMeal(rawString, typeName) {
       if (!rawString || rawString.trim() === '') return null;
       var parts = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ').split(',');
@@ -168,10 +171,40 @@
     }
 
     function buildMenuSlides(jsonData) {
-      var now = new Date(); var tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
-      var todayStr = now.getDate() + '.' + (now.getMonth() + 1) + '.';
-      var tomorrowStr = tomorrow.getDate() + '.' + (tomorrow.getMonth() + 1) + '.';
-      var tObj = { lunch: null, veg: null, dinner: null }; var tmObj = { lunch: null, veg: null, dinner: null };
+      var now = new Date(); 
+      var currentDayOfWeek = now.getDay(); 
+      
+      var col1Date = new Date(now);
+      var col2Date = new Date(now);
+      
+      var col1Title = 'Tänään';
+      var col2Title = 'Huomenna';
+
+      // Viikonloppulogiikka
+      if (currentDayOfWeek === 5) {
+        col2Date.setDate(now.getDate() + 3);
+        col2Title = 'Maanantai';
+      } 
+      else if (currentDayOfWeek === 6) {
+        col1Date.setDate(now.getDate() + 2);
+        col2Date.setDate(now.getDate() + 3);
+        col1Title = 'Maanantai';
+        col2Title = 'Tiistai';
+      } 
+      else if (currentDayOfWeek === 0) {
+        col1Date.setDate(now.getDate() + 1);
+        col2Date.setDate(now.getDate() + 2);
+        col1Title = 'Maanantai';
+        col2Title = 'Tiistai';
+      } else {
+        col2Date.setDate(now.getDate() + 1);
+      }
+
+      var c1Str = col1Date.getDate() + '.' + (col1Date.getMonth() + 1) + '.';
+      var c2Str = col2Date.getDate() + '.' + (col2Date.getMonth() + 1) + '.';
+      
+      var c1Obj = { lunch: null, veg: null, dinner: null }; 
+      var c2Obj = { lunch: null, veg: null, dinner: null };
       var daysArray = (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu) ? jsonData.result.pageContext.menu.Days : [];
 
       function parseDay(datePattern, targetObj) {
@@ -185,19 +218,22 @@
           else if (type.indexOf('lounas') !== -1 || !targetObj.lunch) targetObj.lunch = formatMeal(name, 'Lounas');
         }
       }
-      parseDay(todayStr, tObj); parseDay(tomorrowStr, tmObj);
+      
+      parseDay(c1Str, c1Obj); 
+      parseDay(c2Str, c2Obj);
 
-      var html = '<div class="menu-grid"><div class="day-col"><h2>Tänään</h2>';
-      var tFood = tObj.lunch || tObj.veg || tObj.dinner;
-      if (tFood) html += (tObj.lunch||'') + (tObj.veg||'') + (tObj.dinner||''); else html += '<div class="empty-menu">Ei tallennettua ruokalistaa tälle päivälle.</div>';
-      html += '</div><div class="day-col"><h2>Huomenna</h2>';
-      var tmFood = tmObj.lunch || tmObj.veg || tmObj.dinner;
-      if (tmFood) html += (tmObj.lunch||'') + (tmObj.veg||'') + (tmObj.dinner||''); else html += '<div class="empty-menu">Huomisen ruokalistaa ei ole julkaistu.</div>';
+      var html = '<div class="menu-grid"><div class="day-col"><h2>' + col1Title + '</h2>';
+      var c1Food = c1Obj.lunch || c1Obj.veg || c1Obj.dinner;
+      if (c1Food) html += (c1Obj.lunch||'') + (c1Obj.veg||'') + (c1Obj.dinner||''); else html += '<div class="empty-menu">Ei tallennettua ruokalistaa.</div>';
+      html += '</div><div class="day-col"><h2>' + col2Title + '</h2>';
+      var c2Food = c2Obj.lunch || c2Obj.veg || c2Obj.dinner;
+      if (c2Food) html += (c2Obj.lunch||'') + (c2Obj.veg||'') + (c2Obj.dinner||''); else html += '<div class="empty-menu">Ruokalistaa ei ole julkaistu.</div>';
       html += '</div></div>';
-      createSlideHtml('Päivän Ruokalista', html);
+      
+      createSlideHtml(html);
     }
 
-    // --- KALENTERI (LYHENNETTY) ---
+    // --- KALENTERI ---
     function formatDayKey(dateObj) {
       var daysArr = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
       var monthsArr = ['tammi', 'helmi', 'maalis', 'huhti', 'touko', 'kesä', 'heinä', 'elo', 'syys', 'loka', 'marras', 'joulu'];
@@ -238,7 +274,7 @@
         document.getElementById('ticker-text').textContent = repArr.join('   ///   ');
       }
 
-      if (events.length === 0) { createSlideHtml('Seuraavat Tapahtumat', '<div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div>'); return; }
+      if (events.length === 0) { createSlideHtml('<div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div>'); return; }
 
       var tod = []; var tom = []; var lat = [];
       for (var e = 0; e < events.length; e++) {
@@ -247,7 +283,11 @@
 
       function renderDayGroup(headerText, arr) {
           if (arr.length === 0) return '';
-          var gHtml = '<div class="cal-day-group"><div class="cal-date-header">' + headerText + '</div>';
+          
+          var headerClass = 'cal-date-header' + (headerText === 'Tänään' ? ' today-header' : '');
+          var displayHeader = headerText === 'Tänään' ? '▶ TÄNÄÄN' : headerText;
+          
+          var gHtml = '<div class="cal-day-group"><div class="' + headerClass + '">' + displayHeader + '</div>';
           for (var idx = 0; idx < arr.length; idx++) {
               var timeDisp = arr[idx].time || 'Koko pv'; var locDisp = arr[idx].location ? ' (' + arr[idx].location + ')' : '';
               gHtml += '<div class="cal-event-row"><div class="cal-time">' + timeDisp + '</div><div class="cal-title">' + arr[idx].title + locDisp + '</div></div>';
@@ -256,27 +296,28 @@
       }
 
       var p1 = ''; if (tod.length > 0) p1 += renderDayGroup('Tänään', tod); if (tom.length > 0) p1 += renderDayGroup('Huomenna', tom);
-      if (p1 !== '') createSlideHtml('Tapahtumat: Tänään & Huomenna', p1);
+      if (p1 !== '') createSlideHtml(p1);
 
       if (lat.length > 0) {
           var grouped = {}; var order = []; 
           for (var le = 0; le < lat.length; le++) { if (!grouped[lat[le].dayKey]) { grouped[lat[le].dayKey] = []; order.push(lat[le].dayKey); } grouped[lat[le].dayKey].push(lat[le]); }
           var cHtml = ''; var rows = 0; var maxS = 2; var sC = 0;
+          
           for (var dk = 0; dk < order.length; dk++) {
               if (sC >= maxS) break;
               var dEvs = grouped[order[dk]]; var rNeed = dEvs.length + 1; 
-              if (rows + rNeed > 14 && cHtml !== '') { createSlideHtml('Seuraavat Tapahtumat', cHtml); sC++; cHtml = ''; rows = 0; if (sC >= maxS) break; }
+              
+              if (rows + rNeed > 16 && cHtml !== '') { createSlideHtml(cHtml); sC++; cHtml = ''; rows = 0; if (sC >= maxS) break; }
               cHtml += renderDayGroup(order[dk], dEvs); rows += rNeed;
           }
-          if (cHtml !== '' && sC < maxS) createSlideHtml('Seuraavat Tapahtumat', cHtml);
+          if (cHtml !== '' && sC < maxS) createSlideHtml(cHtml);
       }
     }
 
-    // --- PÄÄOHJELMA JA "NOPEA ALOITUS" ---
+    // --- PÄÄOHJELMA ---
     var menuReady = false;
     var calReady = false;
 
-    // Päivittää pallot alareunaan reaaliajassa
     function updatePagination() {
       var pagination = document.getElementById('pagination');
       var dotsHtml = '';
@@ -288,16 +329,20 @@
     }
 
     function startShow() {
-      if (timeline.length === 0) return; // Jos dataa ei ole tullut, ei tehdä mitään vielä
+      if (timeline.length === 0) return; 
       updatePagination();
       playTimeline(0);
     }
 
     function checkFastStart() {
-      // Aloita sivu VÄLITTÖMÄSTI kun ruoka ja kalenteri on haettu
       if (menuReady && calReady) {
         startShow();
       }
+    }
+
+    function initSlidesContainer() {
+      var container = document.getElementById('slides-container');
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides"></div>');
     }
 
     function playTimeline(index) {
@@ -309,15 +354,11 @@
       currentStep = index;
       var step = timeline[currentStep];
 
-      // JOS VUOROSSA ON GOOGLE SLIDES
+      // KUN ON GOOGLE SLIDESIN VUORO: Ladataan tismalleen se dia, joka pitää näyttää
       if (step.type === 'gslides') {
-        // Luodaan iFrame vasta kun on Google Slidesin vuoro, jotta se lähtee oikeasti pyörimään TÄSTÄ hetkestä!
-        if (!iframeCreated) {
-          var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?start=true&loop=false&delayms=' + SLIDE_DURATION + '&rm=minimal';
-          var container = document.getElementById('slides-container');
-          container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides"><iframe src="' + iframeUrl + '" allowfullscreen></iframe></div>');
-          iframeCreated = true;
-        }
+        var gContainer = document.getElementById('slide-gslides');
+        var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
+        gContainer.innerHTML = '<iframe src="' + iframeUrl + '" allowfullscreen></iframe>';
       }
 
       var activeSlide = document.querySelector('.view-slide.active');
@@ -335,37 +376,42 @@
       }, step.duration);
     }
 
-    // --- TIETOJEN HAKU ---
-    
-    // 1. Menu (Nopea)
+    // TIETOJEN HAKU
+    initSlidesContainer(); 
+
     ajaxGet(WORKER_URL + '/menu', 'json', function(err, data) {
       if (data && !data.error) buildMenuSlides(data);
-      else createSlideHtml('Päivän Ruokalista', '<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
+      else createSlideHtml('<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
       menuReady = true;
       checkFastStart();
     });
 
-    // 2. Kalenteri (Nopea)
     ajaxGet(WORKER_URL + '/calendar', 'text', function(err, data) {
       if (data) buildCalendarSlides(data);
-      else createSlideHtml('Tulevat Tapahtumat', '<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
+      else createSlideHtml('<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
       calReady = true;
       checkFastStart();
     });
 
-    // 3. GAS (Hidas) - Hakee datan taustalla, lisää sen timelineen lennosta!
     ajaxGet(GAS_SLIDES_URL, 'json', function(err, data) {
-      var slidesCount = (data && data.slideCount) ? data.slideCount : 5;
-      
-      for (var i = 0; i < slidesCount; i++) {
-        timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides' });
+      if (data && data.success && data.slideIds && data.slideIds.length > 0) {
+        for (var i = 0; i < data.slideIds.length; i++) {
+          timeline.push({ 
+            id: 'slide-gslides', 
+            duration: SLIDE_DURATION, 
+            type: 'gslides',
+            slideId: data.slideIds[i]
+          });
+        }
+      } else {
+        // Fallback: Jos slide-ID:tä ei saada syystä X, yritetään ajaa ilman ID:tä "vanhaan tyyliin" 5 kertaa
+        for (var f = 0; f < 5; f++) {
+          timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: '' });
+        }
       }
-      
-      // Päivitä pallot alareunaan, jos show on jo käynnissä
       updatePagination();
     });
 
-    // Fallback: lataa sivu uusiksi 2 minuutin päästä, jos jokin meni fataalisti jumiin verkossa
     setTimeout(function() {
       if (timeline.length === 0) window.location.reload();
     }, 120000);
