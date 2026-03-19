@@ -1,6 +1,9 @@
+<!DOCTYPE html>
+<html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Aggressiivinen meta-tagi joka kieltää selaimelta oman zoomailun -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
   <!-- Välimuistin estot -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -9,18 +12,31 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    body, html { 
-      height: 100%; width: 100%; /* vh -> % on vanhoissa Android-näytöissä turvallisempi */
+    /* Muutettu käyttämään turvallista Flexbox-rakennetta 100vh sijaan */
+    html, body { 
+      width: 100%; 
+      height: 100%; 
+      margin: 0;
+      padding: 0;
       background-color: #020617;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-      overflow: hidden; color: #f8fafc; 
+      overflow: hidden; 
+      color: #f8fafc; 
+      display: flex;
+      flex-direction: column;
     }
     
     #header { 
-      position: absolute; top: 0; width: 100%; height: 80px; 
+      width: 100%; 
+      height: 80px; 
+      flex-shrink: 0; 
       background: rgba(2, 6, 23, 0.8);
-      display: flex; align-items: center; justify-content: space-between; 
-      padding: 0 60px; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 0 60px; 
+      z-index: 1000; 
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     
     .title { 
@@ -44,11 +60,12 @@
     
     #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
     
+    /* Vie kaiken lopputilan näytöltä headerin jälkeen */
     #slides-container { 
       width: 100%; 
-      height: calc(100% - 80px); /* Muutettu 100vh -> 100% varmuuden vuoksi */
-      margin-top: 80px; position: relative; 
-      overflow: hidden; /* UUSI: Estää yli vuotamisen */
+      flex-grow: 1; 
+      position: relative; 
+      overflow: hidden; 
     }
     
     .view-slide {
@@ -68,13 +85,12 @@
       border-radius: 24px; 
       width: 88%; 
       max-width: 1700px; 
-      max-height: 90%; /* UUSI: Estää laatikon venymisen ruudun yli, jos sisältöä on paljon */
+      max-height: 95%; 
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       overflow: hidden;
     }
     
-    /* Otsikot piilotetaan nätimmin, ei riko asettelua */
-    h1 { margin: 0; padding: 0; height: 0; overflow: hidden; opacity: 0; border: none; }
+    h1 { display: none; }
 
     /* RUOKALISTA */
     .menu-grid { display: flex; justify-content: space-between; }
@@ -91,10 +107,7 @@
     /* KALENTERI */
     .cal-day-group { margin-bottom: 40px; }
     .cal-date-header { font-size: 1.17rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 8px; display: inline-block; }
-    
-    /* Tänään korostus */
     .cal-date-header.today-header { color: #f8fafc; font-weight: 700; border-bottom: 2px solid #38bdf8; }
-    
     .cal-event-row { display: flex; align-items: baseline; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .cal-event-row:last-child { border-bottom: none; padding-bottom: 0; }
     .cal-time { font-size: 1.62rem; font-weight: 500; color: #f8fafc; width: 140px; flex-shrink: 0; } 
@@ -114,7 +127,6 @@
     .dot.active { background: rgba(56, 189, 248, 0.5); transform: scale(1.4); }
   </style>
 </head>
-
 <body>
   <div id="header">
     <div class="title">TERVETULOA MÄRSKYYN</div>
@@ -137,6 +149,8 @@
     var currentStep = 0;
     var timer = null;
     var slideCountId = 1;
+    var iframeCreated = false;
+    var gasData = null;
 
     function updateClock() {
       var now = new Date();
@@ -145,10 +159,7 @@
       var h = now.getHours(); var m = now.getMinutes();
       document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
 
-      // Yöllinen uudelleenlataus (Klo 02:00)
-      if (h === 2 && m === 0 && now.getSeconds() < 2) {
-        window.location.reload(true);
-      }
+      if (h === 2 && m === 0 && now.getSeconds() < 2) window.location.reload(true);
     }
     setInterval(updateClock, 1000); updateClock();
 
@@ -185,34 +196,14 @@
     }
 
     function buildMenuSlides(jsonData) {
-      var now = new Date(); 
-      var currentDayOfWeek = now.getDay(); 
-      
-      var col1Date = new Date(now);
-      var col2Date = new Date(now);
-      
-      var col1Title = 'Tänään';
-      var col2Title = 'Huomenna';
+      var now = new Date(); var currentDayOfWeek = now.getDay(); 
+      var col1Date = new Date(now); var col2Date = new Date(now);
+      var col1Title = 'Tänään'; var col2Title = 'Huomenna';
 
-      // Viikonloppulogiikka
-      if (currentDayOfWeek === 5) {
-        col2Date.setDate(now.getDate() + 3);
-        col2Title = 'Maanantai';
-      } 
-      else if (currentDayOfWeek === 6) {
-        col1Date.setDate(now.getDate() + 2);
-        col2Date.setDate(now.getDate() + 3);
-        col1Title = 'Maanantai';
-        col2Title = 'Tiistai';
-      } 
-      else if (currentDayOfWeek === 0) {
-        col1Date.setDate(now.getDate() + 1);
-        col2Date.setDate(now.getDate() + 2);
-        col1Title = 'Maanantai';
-        col2Title = 'Tiistai';
-      } else {
-        col2Date.setDate(now.getDate() + 1);
-      }
+      if (currentDayOfWeek === 5) { col2Date.setDate(now.getDate() + 3); col2Title = 'Maanantai'; } 
+      else if (currentDayOfWeek === 6) { col1Date.setDate(now.getDate() + 2); col2Date.setDate(now.getDate() + 3); col1Title = 'Maanantai'; col2Title = 'Tiistai'; } 
+      else if (currentDayOfWeek === 0) { col1Date.setDate(now.getDate() + 1); col2Date.setDate(now.getDate() + 2); col1Title = 'Maanantai'; col2Title = 'Tiistai'; } 
+      else { col2Date.setDate(now.getDate() + 1); }
 
       var c1Str = col1Date.getDate() + '.' + (col1Date.getMonth() + 1) + '.';
       var c2Str = col2Date.getDate() + '.' + (col2Date.getMonth() + 1) + '.';
@@ -233,8 +224,7 @@
         }
       }
       
-      parseDay(c1Str, c1Obj); 
-      parseDay(c2Str, c2Obj);
+      parseDay(c1Str, c1Obj); parseDay(c2Str, c2Obj);
 
       var html = '<div class="menu-grid"><div class="day-col"><h2>' + col1Title + '</h2>';
       var c1Food = c1Obj.lunch || c1Obj.veg || c1Obj.dinner;
@@ -297,10 +287,8 @@
 
       function renderDayGroup(headerText, arr) {
           if (arr.length === 0) return '';
-          
           var headerClass = 'cal-date-header' + (headerText === 'Tänään' ? ' today-header' : '');
           var displayHeader = headerText === 'Tänään' ? '▶ TÄNÄÄN' : headerText;
-          
           var gHtml = '<div class="cal-day-group"><div class="' + headerClass + '">' + displayHeader + '</div>';
           for (var idx = 0; idx < arr.length; idx++) {
               var timeDisp = arr[idx].time || 'Koko pv'; var locDisp = arr[idx].location ? ' (' + arr[idx].location + ')' : '';
@@ -316,11 +304,9 @@
           var grouped = {}; var order = []; 
           for (var le = 0; le < lat.length; le++) { if (!grouped[lat[le].dayKey]) { grouped[lat[le].dayKey] = []; order.push(lat[le].dayKey); } grouped[lat[le].dayKey].push(lat[le]); }
           var cHtml = ''; var rows = 0; var maxS = 2; var sC = 0;
-          
           for (var dk = 0; dk < order.length; dk++) {
               if (sC >= maxS) break;
               var dEvs = grouped[order[dk]]; var rNeed = dEvs.length + 1; 
-              
               if (rows + rNeed > 16 && cHtml !== '') { createSlideHtml(cHtml); sC++; cHtml = ''; rows = 0; if (sC >= maxS) break; }
               cHtml += renderDayGroup(order[dk], dEvs); rows += rNeed;
           }
@@ -361,14 +347,13 @@
 
     function playTimeline(index) {
       if (index >= timeline.length) {
-        window.location.reload();
+        window.location.reload(true);
         return;
       }
       
       currentStep = index;
       var step = timeline[currentStep];
 
-      // KUN ON GOOGLE SLIDESIN VUORO: Ladataan tismalleen se dia, joka pitää näyttää
       if (step.type === 'gslides') {
         var gContainer = document.getElementById('slide-gslides');
         var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
@@ -410,15 +395,9 @@
     ajaxGet(GAS_SLIDES_URL, 'json', function(err, data) {
       if (data && data.success && data.slideIds && data.slideIds.length > 0) {
         for (var i = 0; i < data.slideIds.length; i++) {
-          timeline.push({ 
-            id: 'slide-gslides', 
-            duration: SLIDE_DURATION, 
-            type: 'gslides',
-            slideId: data.slideIds[i]
-          });
+          timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: data.slideIds[i] });
         }
       } else {
-        // Fallback: Jos slide-ID:tä ei saada syystä X, yritetään ajaa ilman ID:tä "vanhaan tyyliin" 5 kertaa
         for (var f = 0; f < 5; f++) {
           timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: '' });
         }
@@ -427,7 +406,7 @@
     });
 
     setTimeout(function() {
-      if (timeline.length === 0) window.location.reload();
+      if (timeline.length === 0) window.location.reload(true);
     }, 120000);
 
   </script>
