@@ -32,10 +32,13 @@
 #sidebar-hsl { height: 350px; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); background: #020617; overflow: hidden; flex-shrink: 0; position: relative; }
 /* Annetaan iframelle leveämpi tila ja kutistetaan se mahtumaan palkkiin */
 #sidebar-hsl iframe { 
-  width: 320px; 
-  height: 790px; 
+  /* Annetaan paljon enemmän leveyttä, jotta teksti mahtuu eikä HSL:n häivytys iske heti */
+  width: 500px; 
+  /* Korkeutta pitää myös suurentaa, jotta aikataulurivejä näkyy tarpeeksi alaspäin skaalauksen jälkeen */
+  height: 1230px; 
   border: none; 
-  transform: scale(0.443); /* 142px jaettuna 320px = n. 0.443 */
+  /* Kutistetaan se takaisin 142 pikseliin. (142 / 500 = 0.284) */
+  transform: scale(0.284); 
   transform-origin: top left;
 }
 
