@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mäkelänrinteen lukio Info-TV</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { height: 100vh; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; color: white; }
+    #header { position: fixed; top: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.85); 
+              backdrop-filter: blur(10px); display: flex; align-items: center; 
+              justify-content: space-between; padding: 0 40px; z-index: 1000; }
+    .title { font-size: 2.2rem; font-weight: 700; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    #clock { font-size: 1.8rem; font-weight: 600; color: #4CAF50; }
+    .view { display: none; width: 100%; height: 100vh; padding-top: 80px; }
+    .view.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .content { background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); 
+                margin: 40px auto; padding: 50px; border-radius: 25px; width: 90%; max-width: 1600px; 
+                border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+    h1 { font-size: 4rem; margin-bottom: 40px; text-align: center; color: #fff; 
+         text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .data-item { font-size: 2.5rem; margin: 30px 0; padding: 20px; background: rgba(0,0,0,0.3); 
+                 border-radius: 15px; border-left: 5px solid #4CAF50; }
+    #slides-iframe { width: 100%; height: 100vh; border: none; border-radius: 0 0 25px 25px; }
+    .loading { text-align: center; font-size: 2rem; color: #ccc; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="title">🎓 Mäkelänrinteen lukio</div>
+    <div id="clock">--.--.---- --:--</div>
+  </div>
+
+  <div id="view-menu" class="view">
+    <div class="content">
+      <h1>🍽️ Tämän päivän ruoka</h1>
+      <div id="menu-data" class="loading">Ladataan ruokalistaa...</div>
+    </div>
+  </div>
+
+  <div id="view-calendar" class="view">
+    <div class="content">
+      <h1>📅 Seuraavat tapahtumat</h1>
+      <div id="calendar-data" class="loading">Ladataan kalenteria...</div>
+    </div>
+  </div>
+
+  <div id="view-slides" class="view">
+    <iframe id="slides-iframe" allowfullscreen></iframe>
+  </div>
+
+  <script>
+    // KONFIGURAATIO - MUUTA NÄMÄ OMAKSI
+    const WORKER_URL = 'https://infotv-proxy.NIMI.workers.dev'; // Korvaa Worker-nimelläsi
+    const SLIDES_ID = '1abc123DEF456ghi789JKL0'; // Korvaa Slides-tiedoston ID:llä
+    
+    // Näyttöajat (millisekunnit)
+    const SHOW_MENU = 20000;
+    const SHOW_CALENDAR = 20000;
+    const SHOW_SLIDES = 45000;
+
+    // Kello
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.toLocaleDateString('fi-FI', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}) + 
+        ' ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // Näyttöjen vaihto
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    // Hae ruokalista
+    async function loadMenu() {
+      try {
+        const res = await fetch(`${WORKER_URL}/menu`);
+        const data = await res.json();
+        document.getElementById('menu-data').innerHTML = `
+          <div class="data-item"><strong>🥗 Lounas:</strong> ${data.lunch || 'Ei tietoa'}</div>
+          <div class="data-item"><strong>🍲 Päivällinen:</strong> ${data.dinner || 'Ei tietoa'}</div>
+        `;
+      } catch(e) {
+        document.getElementById('menu-data').innerHTML = '<div class="data-item">Ruokalistaa ei saatu ladattua</div>';
+      }
+    }
+
+    // Hae kalenteri
+    async function loadCalendar() {
+      try {
+        const res = await fetch(`${WORKER_URL}/calendar`);
+        const events = await res.json();
+        const html = events.map(e => 
+          `<div class="data-item">${e.title || 'Tapahtuma'}</div>`
+        ).join('');
+        document.getElementById('calendar-data').innerHTML = html || '<div class="data-item">Ei tapahtumia</div>';
+      } catch(e) {
+        document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei saatavilla</div>';
+      }
+    }
+
+    // Pääsilmukka
+    async function runLoop() {
+      await loadMenu();
+      await loadCalendar();
+      
+      showView('view-menu'); await new Promise(r => setTimeout(r, SHOW_MENU));
+      showView('view-calendar'); await new Promise(r => setTimeout(r, SHOW_CALENDAR));
+      
+      // Slides tuoreella timestampilla
+      document.getElementById('slides-iframe').src = 
+        `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=false&loop=false&delayms=6000&rm=minimal&t=${Date.now()}`;
+      showView('view-slides'); await new Promise(r => setTimeout(r, SHOW_SLIDES));
+      
+      // Uudelleenlataus muistin tyhjennykseen
+      window.location.reload();
+    }
+
+    runLoop();
+  </script>
+</body>
+</html>
