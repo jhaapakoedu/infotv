@@ -57,7 +57,6 @@
     
     #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
     
-    /* UUSI RAKENNE: Main wrapper pitää sisällään sivupalkin ja slides-alueen rinnakkain */
     #main-wrapper {
       display: flex;
       flex-direction: row;
@@ -67,9 +66,8 @@
       position: relative;
     }
 
-    /* UUSI SIVUPALKKI */
     #sidebar {
-      width: 160px; /* Kompakti leveys */
+      width: 160px; 
       flex-shrink: 0;
       background: rgba(15, 23, 42, 0.4);
       border-right: 1px solid rgba(255,255,255,0.05);
@@ -171,7 +169,7 @@
     var timer = null;
     var slideCountId = 1;
     var nextGPlayer = 0; 
-    var allCalendarEvents = []; // Globaali tallennuspaikka tapahtumille
+    var allCalendarEvents = []; 
 
     function escapeHtml(text) {
       if (!text) return '';
@@ -187,15 +185,13 @@
       document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
       
       if (h === 2 && m === 0 && s < 2) window.location.reload(true);
-
-      // Päivitetään sivupalkki tasaminuutein (poistaa ohimenneet tapahtumat)
       if (s === 0) updateSidebar();
     }
     setInterval(updateClock, 1000); 
     
-    // --- UUSI: Sivupalkin piirto ---
     function updateSidebar() {
       var sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
       if (!allCalendarEvents || allCalendarEvents.length === 0) {
         sidebar.innerHTML = '<div style="color:#64748b; font-size:0.8rem; text-align:center; padding-top:20px;">Ei tapahtumia ladattuna.</div>';
         return;
@@ -207,7 +203,6 @@
       for (var i = 0; i < allCalendarEvents.length; i++) {
         var ev = allCalendarEvents[i];
         if (ev.isToday) {
-          // Jos tapahtuma on jo päättynyt (endDate on menneisyydessä), ohitetaan se!
           if (ev.endDate && ev.endDate < now) continue;
           todayEvents.push(ev);
         }
@@ -231,16 +226,27 @@
       sidebar.innerHTML = html;
     }
 
+    // UUSITTU, TURVALLINEN ajaxGet - ei vahingossa tuplaa ajoja
     function ajaxGet(url, responseType, callback) {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status >= 200 && xhr.status < 300) {
+            var dataObj = null;
             if (responseType === 'json') {
-              try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(e, null); }
-            } else { callback(null, xhr.responseText); }
-          } else { callback(new Error('HTTP Error'), null); }
+              try { 
+                dataObj = JSON.parse(xhr.responseText); 
+              } catch(e) { 
+                return callback(e, null); 
+              }
+              return callback(null, dataObj);
+            } else { 
+              return callback(null, xhr.responseText); 
+            }
+          } else { 
+            return callback(new Error('HTTP Error'), null); 
+          }
         }
       };
       xhr.send();
@@ -277,7 +283,9 @@
       
       var c1Obj = { lunch: null, veg: null, dinner: null }; 
       var c2Obj = { lunch: null, veg: null, dinner: null };
-      var daysArray = (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu) ? jsonData.result.pageContext.menu.Days : [];
+      
+      // Korjattu null-check
+      var daysArray = (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu && jsonData.result.pageContext.menu.Days) ? jsonData.result.pageContext.menu.Days : [];
 
       function parseDay(datePattern, targetObj) {
         var dayData = null;
@@ -320,7 +328,7 @@
       for (var i = 1; i < blocks.length; i++) {
         var summaryMatch = blocks[i].match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i); 
         var dtstartMatch = blocks[i].match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i); 
-        var dtendMatch = blocks[i].match(/DTEND(?:;[^:]*)?:([^\r\n]*)/i); // UUSI: Päättymisaika
+        var dtendMatch = blocks[i].match(/DTEND(?:;[^:]*)?:([^\r\n]*)/i); 
         var locMatch = blocks[i].match(/LOCATION(?:;[^:]*)?:([^\r\n]*)/i);
         if (!summaryMatch || !dtstartMatch) continue;
         
@@ -329,14 +337,12 @@
         var loc = locMatch ? locMatch[1].trim().substring(0, 25) : '';
         var eDate = null; var endDate = null; var timeStr = ''; var isToday = false; var isTom = false;
 
-        // Kokopäivän tapahtumat
         if (dtstart.length === 8) {  
           var y1 = parseInt(dtstart.substr(0,4), 10); var m1 = parseInt(dtstart.substr(4,2), 10) - 1; var d1 = parseInt(dtstart.substr(6,2), 10);
           eDate = new Date(y1, m1, d1, 12, 0, 0); 
-          endDate = new Date(y1, m1, d1, 23, 59, 59); // Päättyy päivän lopussa
+          endDate = new Date(y1, m1, d1, 23, 59, 59); 
           isToday = (y1 === cy && m1 === cm && d1 === cd); isTom = (y1 === ty && m1 === tm && d1 === td);
         } 
-        // Aikaan sidotut tapahtumat
         else if (dtstart.indexOf('T') !== -1) {  
           var p = dtstart.split('T'); 
           var y2 = parseInt(p[0].substr(0,4), 10); var m2 = parseInt(p[0].substr(4,2), 10) - 1; var d2 = parseInt(p[0].substr(6,2), 10);
@@ -358,7 +364,6 @@
           isToday = (localYear === cy && localMonth === cm && localDay === cd); 
           isTom = (localYear === ty && localMonth === tm && localDay === td);
 
-          // Lasketaan Päättymisaika
           if (dtendMatch) {
             var dte = dtendMatch[1];
             if (dte.indexOf('T') !== -1) {
@@ -371,7 +376,7 @@
             }
           }
           if (!endDate && eDate) {
-            endDate = new Date(eDate.getTime() + 60 * 60 * 1000); // Oletuksena 1h
+            endDate = new Date(eDate.getTime() + 60 * 60 * 1000); 
           }
         }
 
@@ -380,7 +385,7 @@
         
         events.push({ 
             date: eDate, 
-            endDate: endDate, // Tallennetaan purkua varten
+            endDate: endDate,
             title: escapeHtml(fullTitle.substring(0,50)), 
             time: timeStr, 
             location: escapeHtml(loc), 
@@ -390,8 +395,8 @@
       }
 
       events.sort(function(a, b) { return a.date - b.date; });
-      allCalendarEvents = events; // Tallennetaan sivupalkkia varten
-      updateSidebar(); // Piirretään sivupalkki heti
+      allCalendarEvents = events; 
+      updateSidebar(); 
 
       if (alerts.length > 0) {
         document.getElementById('ticker-container').style.display = 'flex';
@@ -437,6 +442,7 @@
 
     function updatePagination() {
       var pagination = document.getElementById('pagination');
+      if (!pagination) return;
       var dotsHtml = '';
       for (var p = 0; p < timeline.length; p++) {
         dotsHtml += '<div class="dot ' + (p === currentStep ? 'active' : '') + '"></div>';
@@ -447,6 +453,7 @@
 
     function initSlidesContainer() {
       var container = document.getElementById('slides-container');
+      if (!container) return;
       container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-0"></div>');
       container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-1"></div>');
     }
@@ -463,7 +470,7 @@
         var container = document.getElementById('slide-gslides-' + step.playerId);
         var url = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
         
-        if (!container.innerHTML || container.innerHTML.indexOf(step.slideId) === -1) {
+        if (container && (!container.innerHTML || container.innerHTML.indexOf(step.slideId) === -1)) {
           container.innerHTML = '<iframe src="' + url + '" allowfullscreen></iframe>';
         }
       }
@@ -471,7 +478,7 @@
 
     function startShow() {
       if (timeline.length === 0) return; 
-      updateClock(); // Varmistaa että kellot käy heti
+      updateClock(); 
       updatePagination();
       preloadTimelineItem(0);
       playTimeline(0);
@@ -511,22 +518,31 @@
 
     initSlidesContainer(); 
 
+    var menuReady = false;
+    var calReady = false;
+
     ajaxGet(WORKER_URL + '/menu', 'json', function(err, data) {
-      if (data && !data.error) buildMenuSlides(data);
-      else createSlideHtml('<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
+      if (!err && data && !data.error) {
+        buildMenuSlides(data);
+      } else {
+        createSlideHtml('<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
+      }
       menuReady = true;
       checkFastStart();
     });
 
     ajaxGet(WORKER_URL + '/calendar', 'text', function(err, data) {
-      if (data) buildCalendarSlides(data);
-      else createSlideHtml('<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
+      if (!err && data) {
+        buildCalendarSlides(data);
+      } else {
+        createSlideHtml('<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
+      }
       calReady = true;
       checkFastStart();
     });
 
     ajaxGet(GAS_SLIDES_URL, 'json', function(err, data) {
-      if (data && data.success && data.slideIds && data.slideIds.length > 0) {
+      if (!err && data && data.success && data.slideIds && data.slideIds.length > 0) {
         for (var i = 0; i < data.slideIds.length; i++) {
           timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: data.slideIds[i] });
         }
