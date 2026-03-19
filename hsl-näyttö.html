@@ -20,35 +20,18 @@
     
     #main-wrapper { display: flex; flex-direction: row; flex-grow: 1; width: 100%; overflow: hidden; position: relative; }
     
-    /* PÄIVITETTY SIVUPALKKI: Jaettu yläosaan (kalenteri) ja alaosaan (HSL) */
+    /* Täydellinen matemaattinen asetus (142px), jotta pääalue on tasan 16:9-kuvasuhteessa 1080p näytöllä */
     #sidebar { 
-      width: 220px; /* HSL-näyttö vaatii hieman enemmän tilaa ollakseen luettava, nostettu 160 -> 220 */
+      width: 142px; 
       flex-shrink: 0; background: rgba(15, 23, 42, 0.4); 
       border-right: 1px solid rgba(255,255,255,0.05); 
       display: flex; flex-direction: column; overflow: hidden; z-index: 50; box-shadow: 5px 0 15px rgba(0,0,0,0.2); 
     }
     
-    /* Kalenteri-alue sivupalkin yläosassa (joustava korkeus, jättää tilaa HSL:lle) */
-    #sidebar-calendar {
-      flex-grow: 1;
-      padding: 20px 15px;
-      overflow: hidden;
-    }
+    #sidebar-calendar { flex-grow: 1; padding: 20px 10px; overflow: hidden; }
 
-    /* HSL upotus sivupalkin alaosassa (kiinteä korkeus) */
-    #sidebar-hsl {
-      height: 350px;
-      width: 100%;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      background: #020617;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    #sidebar-hsl iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    #sidebar-hsl { height: 350px; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); background: #020617; overflow: hidden; flex-shrink: 0; }
+    #sidebar-hsl iframe { width: 100%; height: 100%; border: none; }
 
     #slides-container { flex-grow: 1; position: relative; overflow: hidden; background: #000; }
     
@@ -99,7 +82,7 @@
     <div id="sidebar">
       <div id="sidebar-calendar"></div>
       <div id="sidebar-hsl">
-        <!-- HSL upotus on laitettu suoraan tänne -->
+        <!-- HSL upotus HSL Omat Näytöt -->
         <iframe src="https://omatnaytot.hsl.fi/view?cont=qvJ1cKmK9p8i9NVj-UrrCQ==" allow="autoplay; fullscreen" title="Pysäkkinäyttö"></iframe>
       </div>
     </div>
@@ -109,7 +92,10 @@
 
   <script>
     var WORKER_URL = 'https://infotv.jhaapako.workers.dev';
+    
+    /* HUOM: Varmista onko tämä yhä se toimiva URL uudelleenjulkaisun jälkeen! */
     var GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
+    
     var SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
     
     var INFO_DURATION = 8000; 
@@ -147,14 +133,14 @@
       var now = new Date(); var todayEvents = [];
       for (var i = 0; i < allCalendarEvents.length; i++) { var ev = allCalendarEvents[i]; if (ev.isToday) { if (ev.endDate && ev.endDate < now) continue; todayEvents.push(ev); } }
 
-      var html = '<div style="font-size: 0.95rem; color: #38bdf8; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid rgba(56,189,248,0.2); padding-bottom: 5px;">▶ TÄNÄÄN</div>';
-      if (todayEvents.length === 0) { html += '<div style="color:#64748b; font-size:0.8rem; font-weight:300; font-style:italic;">Ei enää tapahtumia tälle päivälle.</div>'; } else {
+      var html = '<div style="font-size: 0.85rem; color: #38bdf8; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid rgba(56,189,248,0.2); padding-bottom: 5px;">▶ TÄNÄÄN</div>';
+      if (todayEvents.length === 0) { html += '<div style="color:#64748b; font-size:0.7rem; font-weight:300; font-style:italic;">Ei enää tapahtumia tälle päivälle.</div>'; } else {
         for (var j = 0; j < todayEvents.length; j++) {
           var ev = todayEvents[j]; var timeText = ev.time || 'Koko pv';
           html += '<div style="margin-bottom: 12px; border-left: 2px solid #38bdf8; padding-left: 8px; word-wrap: break-word;">';
-          html += '<div style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;">' + timeText + '</div>';
-          html += '<div style="font-size: 0.75rem; font-weight: 300; color: #cbd5e1; line-height: 1.3; margin-top: 2px;">' + ev.title + '</div>';
-          if (ev.location) html += '<div style="font-size: 0.65rem; color: #64748b; margin-top: 1px;">(' + ev.location + ')</div></div>';
+          html += '<div style="font-size: 0.75rem; font-weight: 600; color: #f8fafc;">' + timeText + '</div>';
+          html += '<div style="font-size: 0.65rem; font-weight: 300; color: #cbd5e1; line-height: 1.3; margin-top: 2px;">' + ev.title + '</div>';
+          if (ev.location) html += '<div style="font-size: 0.55rem; color: #64748b; margin-top: 1px;">(' + ev.location + ')</div></div>';
         }
       }
       calContainer.innerHTML = html;
