@@ -51,75 +51,53 @@
     <iframe id="slides-iframe" allowfullscreen></iframe>
   </div>
 
-  <script>
-    // KONFIGURAATIO - MUUTA NÄMÄ OMAKSI
-    const WORKER_URL = 'https://infotv-proxy.NIMI.workers.dev'; // Korvaa Worker-nimelläsi
-    const SLIDES_ID = '1abc123DEF456ghi789JKL0'; // Korvaa Slides-tiedoston ID:llä
-    
-    // Näyttöajat (millisekunnit)
-    const SHOW_MENU = 20000;
-    const SHOW_CALENDAR = 20000;
-    const SHOW_SLIDES = 45000;
+<script>
+// KONFIGURAATIO
+const WORKER_URL = 'https://infotv.jhaapako.workers.dev';  // OMA Worker
+const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';  // ← KORVAA
+const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';  // OMA Slides ID
 
-    // Kello
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('clock').textContent = 
-        now.toLocaleDateString('fi-FI', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}) + 
-        ' ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
-    }
-    setInterval(updateClock, 1000); updateClock();
+// ... (kello, showView, loadMenu, loadCalendar SAMAT) ...
 
-    // Näyttöjen vaihto
-    function showView(viewId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-    }
-
-    // Hae ruokalista
-    async function loadMenu() {
-      try {
-        const res = await fetch(`${WORKER_URL}/menu`);
-        const data = await res.json();
-        document.getElementById('menu-data').innerHTML = `
-          <div class="data-item"><strong>🥗 Lounas:</strong> ${data.lunch || 'Ei tietoa'}</div>
-          <div class="data-item"><strong>🍲 Päivällinen:</strong> ${data.dinner || 'Ei tietoa'}</div>
-        `;
-      } catch(e) {
-        document.getElementById('menu-data').innerHTML = '<div class="data-item">Ruokalistaa ei saatu ladattua</div>';
-      }
-    }
-
-    // Hae kalenteri
-async function loadCalendar() {
+// UUSI: Hae Slides-aika
+async function getSlidesDuration() {
   try {
-    const res = await fetch(`${WORKER_URL}/calendar`);
-    const events = await res.json();
-    const html = events.map(e => `<div class="data-item">${e.title}</div>`).join('');
-    document.getElementById('calendar-data').innerHTML = html;
+    const res = await fetch(GAS_SLIDES_URL);
+    const info = await res.json();
+    console.log('Slides info:', info);  // Debug
+    return info.totalTime || 240000;  // Fallback 4min
   } catch(e) {
-    document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei saatavilla</div>';
+    console.error('GAS error:', e);
+    return 240000;
   }
 }
 
-    // Pääsilmukka
-    async function runLoop() {
-      await loadMenu();
-      await loadCalendar();
-      
-      showView('view-menu'); await new Promise(r => setTimeout(r, SHOW_MENU));
-      showView('view-calendar'); await new Promise(r => setTimeout(r, SHOW_CALENDAR));
-      
-      // Slides tuoreella timestampilla
-      document.getElementById('slides-iframe').src = 
-        `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=false&loop=false&delayms=6000&rm=minimal&t=${Date.now()}`;
-      showView('view-slides'); await new Promise(r => setTimeout(r, SHOW_SLIDES));
-      
-      // Uudelleenlataus muistin tyhjennykseen
-      window.location.reload();
-    }
+// Päivitetty pääsilmukka
+async function runLoop() {
+  await loadMenu();
+  await loadCalendar();
+  
+  // Ruoka 20s
+  showView('view-menu'); 
+  await new Promise(r => setTimeout(r, 20000));
+  
+  // Kalenteri 20s  
+  showView('view-calendar'); 
+  await new Promise(r => setTimeout(r, 20000));
+  
+  // SLIDES: Tarkka aika Apps Scriptistä!
+  const slidesTime = await getSlidesDuration();
+  console.log(`Showing slides for ${slidesTime/1000}s`);
+  
+  document.getElementById('slides-iframe').src = 
+    `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=6500&t=${Date.now()}`;
+  
+  showView('view-slides'); 
+  await new Promise(r => setTimeout(r, slidesTime));
+  
+  window.location.reload();  // Täydellinen ajoitus!
+}
+</script>
 
-    runLoop();
-  </script>
 </body>
 </html>
