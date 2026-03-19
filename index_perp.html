@@ -30,7 +30,7 @@
 <body>
   <div id="header">
     <div class="title">🎓 Mäkelänrinteen lukio</div>
-    <div id="clock">--.--.---- --:--</div>
+    <div id="clock">Kello käynnistyy...</div>
   </div>
 
   <div id="view-menu" class="view">
@@ -51,53 +51,107 @@
     <iframe id="slides-iframe" allowfullscreen></iframe>
   </div>
 
-<script>
-// KONFIGURAATIO
-const WORKER_URL = 'https://infotv.jhaapako.workers.dev';  // OMA Worker
-const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';  // ← KORVAA
-const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';  // OMA Slides ID
+  <script>
+    // KONFIGURAATIO (Sinun asettamat URLit)
+    const WORKER_URL = 'https://infotv.jhaapako.workers.dev';
+    const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
+    const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
 
-// ... (kello, showView, loadMenu, loadCalendar SAMAT) ...
+    // --- KELLON PÄIVITYS ---
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.toLocaleDateString('fi-FI', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}) + 
+        ' ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 
-// UUSI: Hae Slides-aika
-async function getSlidesDuration() {
-  try {
-    const res = await fetch(GAS_SLIDES_URL);
-    const info = await res.json();
-    console.log('Slides info:', info);  // Debug
-    return info.totalTime || 240000;  // Fallback 4min
-  } catch(e) {
-    console.error('GAS error:', e);
-    return 240000;
-  }
-}
+    // --- NÄYTTÖJEN VAIHTO ---
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+    }
 
-// Päivitetty pääsilmukka
-async function runLoop() {
-  await loadMenu();
-  await loadCalendar();
-  
-  // Ruoka 20s
-  showView('view-menu'); 
-  await new Promise(r => setTimeout(r, 20000));
-  
-  // Kalenteri 20s  
-  showView('view-calendar'); 
-  await new Promise(r => setTimeout(r, 20000));
-  
-  // SLIDES: Tarkka aika Apps Scriptistä!
-  const slidesTime = await getSlidesDuration();
-  console.log(`Showing slides for ${slidesTime/1000}s`);
-  
-  document.getElementById('slides-iframe').src = 
-    `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=6500&t=${Date.now()}`;
-  
-  showView('view-slides'); 
-  await new Promise(r => setTimeout(r, slidesTime));
-  
-  window.location.reload();  // Täydellinen ajoitus!
-}
-</script>
+    // --- RUOKALISTA ---
+    async function loadMenu() {
+      try {
+        const res = await fetch(`${WORKER_URL}/menu`);
+        if (!res.ok) throw new Error('Verkkovirhe');
+        const data = await res.json();
+        document.getElementById('menu-data').innerHTML = `
+          <div class="data-item"><strong>🥗 Lounas:</strong> ${data.lunch || 'Ei tietoa'}</div>
+          <div class="data-item"><strong>🍲 Päivällinen:</strong> ${data.dinner || 'Ei tietoa'}</div>
+        `;
+      } catch(e) {
+        document.getElementById('menu-data').innerHTML = '<div class="data-item">Ruokalistaa ei saatu ladattua.</div>';
+      }
+    }
 
+    // --- KALENTERI ---
+    async function loadCalendar() {
+      try {
+        const res = await fetch(`${WORKER_URL}/calendar`);
+        if (!res.ok) throw new Error('Verkkovirhe');
+        const events = await res.json();
+        
+        let html = '';
+        if (Array.isArray(events)) {
+          html = events.map(e => `<div class="data-item">${e.title}</div>`).join('');
+        } else {
+          html = '<div class="data-item">Ei tapahtumia saatavilla</div>';
+        }
+        document.getElementById('calendar-data').innerHTML = html;
+      } catch(e) {
+        document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei ole saatavilla.</div>';
+      }
+    }
+
+    // --- SLIDES-AIKA APPS SCRIPTISTÄ ---
+    async function getSlidesDuration() {
+      try {
+        const res = await fetch(GAS_SLIDES_URL);
+        const info = await res.json();
+        console.log('Slides info:', info);
+        return info.totalTime || 240000;  // Fallback 4min
+      } catch(e) {
+        console.error('GAS error:', e);
+        return 240000;
+      }
+    }
+
+    // --- PÄÄSILMUKKA ---
+    async function runLoop() {
+      // Lataa ensin taustalla tiedot HTML:ään
+      await loadMenu();
+      await loadCalendar();
+      
+      // Näytä Ruoka (20 sekuntia)
+      showView('view-menu'); 
+      await new Promise(r => setTimeout(r, 20000));
+      
+      // Näytä Kalenteri (20 sekuntia)
+      showView('view-calendar'); 
+      await new Promise(r => setTimeout(r, 20000));
+      
+      // Hae Slides-aika ja näytä esitys
+      const slidesTime = await getSlidesDuration();
+      console.log(`Näytetään Slidesia ${slidesTime/1000} sekuntia`);
+      
+      document.getElementById('slides-iframe').src = 
+        `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=6500&t=${Date.now()}`;
+      
+      showView('view-slides'); 
+      await new Promise(r => setTimeout(r, slidesTime));
+      
+      // Kun Slides on pyörinyt oikean ajan, lataa sivu alusta muistin tyhjentämiseksi
+      window.location.reload();
+    }
+
+    // KÄYNNISTÄ KUN SIVU LATAUTUU
+    window.onload = function() {
+      runLoop();
+    };
+  </script>
 </body>
 </html>
