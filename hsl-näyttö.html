@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Märsky Info-TV</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif; overflow: hidden; color: #f8fafc; display: flex; flex-direction: column; }
+    
+    #header { width: 100%; height: 80px; flex-shrink: 0; background: rgba(2, 6, 23, 0.8); display: flex; align-items: center; justify-content: space-between; padding: 0 60px; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .title { font-size: 1.5rem; font-weight: 500; letter-spacing: 3px; color: #f8fafc; white-space: nowrap; }
+    #ticker-container { flex-grow: 1; overflow: hidden; margin: 0 40px; display: none; background: transparent; height: 100%; align-items: center; position: relative; }
+    .ticker-text { white-space: nowrap; font-size: 1.6rem; font-weight: 500; letter-spacing: 2px; color: #f87171; text-transform: uppercase; position: absolute; animation: ticker 30s linear infinite; }
+    @keyframes ticker { 0% { left: 100%; } 100% { left: -300%; } }
+    #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
+    
+    #main-wrapper { display: flex; flex-direction: row; flex-grow: 1; width: 100%; overflow: hidden; position: relative; }
+    
+    /* PÄIVITETTY SIVUPALKKI: Jaettu yläosaan (kalenteri) ja alaosaan (HSL) */
+    #sidebar { 
+      width: 220px; /* HSL-näyttö vaatii hieman enemmän tilaa ollakseen luettava, nostettu 160 -> 220 */
+      flex-shrink: 0; background: rgba(15, 23, 42, 0.4); 
+      border-right: 1px solid rgba(255,255,255,0.05); 
+      display: flex; flex-direction: column; overflow: hidden; z-index: 50; box-shadow: 5px 0 15px rgba(0,0,0,0.2); 
+    }
+    
+    /* Kalenteri-alue sivupalkin yläosassa (joustava korkeus, jättää tilaa HSL:lle) */
+    #sidebar-calendar {
+      flex-grow: 1;
+      padding: 20px 15px;
+      overflow: hidden;
+    }
+
+    /* HSL upotus sivupalkin alaosassa (kiinteä korkeus) */
+    #sidebar-hsl {
+      height: 350px;
+      width: 100%;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      background: #020617;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #sidebar-hsl iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    #slides-container { flex-grow: 1; position: relative; overflow: hidden; background: #000; }
+    
+    .view-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 0.8s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); overflow: hidden; }
+    .view-slide.active { opacity: 1; visibility: visible; z-index: 10; }
+    
+    .content { background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); margin: 0 auto; padding: 60px 90px; border-radius: 24px; width: 88%; max-width: 1700px; max-height: 95%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; }
+    
+    h1 { display: none; }
+    .menu-grid { display: flex; justify-content: space-between; }
+    .day-col { flex: 1; margin: 0 40px; }
+    .day-col:first-child { margin-left: 0; }
+    .day-col:last-child { margin-right: 0; }
+    .day-col h2 { font-size: 1.25rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 35px; opacity: 0.9; }
+    .course-item { margin-bottom: 30px; }
+    .course-type { font-size: 0.9rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .course-main { font-size: 1.98rem; font-weight: 400; color: #f8fafc; line-height: 1.3; } 
+    .course-sides { font-size: 1.17rem; color: #94a3b8; margin-top: 8px; font-weight: 300; } 
+    .empty-menu { font-size: 1.62rem; color: #94a3b8; font-weight: 300; font-style: italic; } 
+    
+    .cal-day-group { margin-bottom: 40px; }
+    .cal-date-header { font-size: 1.17rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 8px; display: inline-block; }
+    .cal-date-header.today-header { color: #f8fafc; font-weight: 700; border-bottom: 2px solid #38bdf8; }
+    .cal-event-row { display: flex; align-items: baseline; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .cal-event-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .cal-time { font-size: 1.62rem; font-weight: 500; color: #f8fafc; width: 140px; flex-shrink: 0; } 
+    .cal-title { font-size: 1.62rem; font-weight: 300; color: #cbd5e1; line-height: 1.4; } 
+
+    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: transparent; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: none; display: block; background: transparent; }
+    
+    .media-video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+    .media-image { width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; background-color: #000; }
+    
+    #pagination { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; z-index: 1000; background: rgba(0, 0, 0, 0.2); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.01); }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); transition: all 0.4s ease; margin: 0 5px; }
+    .dot.active { background: rgba(56, 189, 248, 0.5); transform: scale(1.4); }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="title">TERVETULOA MÄRSKYYN</div>
+    <div id="ticker-container"><div class="ticker-text" id="ticker-text"></div></div>
+    <div id="clock">Kello...</div>
+  </div>
+
+  <div id="main-wrapper">
+    <div id="sidebar">
+      <div id="sidebar-calendar"></div>
+      <div id="sidebar-hsl">
+        <!-- HSL upotus on laitettu suoraan tänne -->
+        <iframe src="https://omatnaytot.hsl.fi/view?cont=qvJ1cKmK9p8i9NVj-UrrCQ==" allow="autoplay; fullscreen" title="Pysäkkinäyttö"></iframe>
+      </div>
+    </div>
+    <div id="slides-container"></div>
+  </div>
+  <div id="pagination" style="display: none;"></div>
+
+  <script>
+    var WORKER_URL = 'https://infotv.jhaapako.workers.dev';
+    var GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
+    var SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
+    
+    var INFO_DURATION = 8000; 
+    var SLIDE_DURATION = 15000;
+
+    var timeline = [];
+    var currentStep = 0;
+    var timer = null;
+    var slideCountId = 1;
+    var nextGPlayer = 0; 
+    var allCalendarEvents = []; 
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+    
+    function updateClock() {
+      var now = new Date();
+      var days = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
+      var dateStr = days[now.getDay()] + ' ' + now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
+      var h = now.getHours(); var m = now.getMinutes(); var s = now.getSeconds();
+      document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+      
+      if (h === 2 && m === 0 && s < 2) window.location.reload(true);
+      if (s === 0) updateSidebar();
+    }
+    setInterval(updateClock, 1000); 
+    
+    function updateSidebar() {
+      var calContainer = document.getElementById('sidebar-calendar');
+      if (!calContainer) return;
+      if (!allCalendarEvents || allCalendarEvents.length === 0) { calContainer.innerHTML = '<div style="color:#64748b; font-size:0.8rem; text-align:center; padding-top:20px;">Ei tapahtumia ladattuna.</div>'; return; }
+      var now = new Date(); var todayEvents = [];
+      for (var i = 0; i < allCalendarEvents.length; i++) { var ev = allCalendarEvents[i]; if (ev.isToday) { if (ev.endDate && ev.endDate < now) continue; todayEvents.push(ev); } }
+
+      var html = '<div style="font-size: 0.95rem; color: #38bdf8; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid rgba(56,189,248,0.2); padding-bottom: 5px;">▶ TÄNÄÄN</div>';
+      if (todayEvents.length === 0) { html += '<div style="color:#64748b; font-size:0.8rem; font-weight:300; font-style:italic;">Ei enää tapahtumia tälle päivälle.</div>'; } else {
+        for (var j = 0; j < todayEvents.length; j++) {
+          var ev = todayEvents[j]; var timeText = ev.time || 'Koko pv';
+          html += '<div style="margin-bottom: 12px; border-left: 2px solid #38bdf8; padding-left: 8px; word-wrap: break-word;">';
+          html += '<div style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;">' + timeText + '</div>';
+          html += '<div style="font-size: 0.75rem; font-weight: 300; color: #cbd5e1; line-height: 1.3; margin-top: 2px;">' + ev.title + '</div>';
+          if (ev.location) html += '<div style="font-size: 0.65rem; color: #64748b; margin-top: 1px;">(' + ev.location + ')</div></div>';
+        }
+      }
+      calContainer.innerHTML = html;
+    }
+
+    function ajaxGet(url, responseType, callback) {
+      var xhr = new XMLHttpRequest(); xhr.open('GET', url, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (responseType === 'json') { try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(e, null); } } else { callback(null, xhr.responseText); }
+          } else { callback(new Error('HTTP Error'), null); }
+        }
+      }; xhr.send();
+    }
+
+    function createSlideHtml(htmlContent) {
+      var id = 'slide-gen-' + slideCountId; var container = document.getElementById('slides-container');
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '"><div class="content">' + (htmlContent || '') + '</div></div>');
+      timeline.push({ id: id, duration: INFO_DURATION, type: 'info' }); slideCountId++;
+    }
+
+    function createDriveMediaSlide(fileObj) {
+      var id = 'slide-media-' + slideCountId; var container = document.getElementById('slides-container'); var html = '';
+      if (fileObj.type === 'video') { var directUrl = 'https://drive.google.com/uc?export=download&id=' + fileObj.id; html = '<video class="media-video" autoplay muted loop preload="none"><source src="' + directUrl + '" type="video/mp4"></video>'; } 
+      else if (fileObj.type === 'image') { var imgUrl = 'https://drive.google.com/uc?export=view&id=' + fileObj.id; html = '<div class="media-image" style="background-image: url(\'' + imgUrl + '\');"></div>'; } 
+      else if (fileObj.type === 'pdf') { var pdfUrl = 'https://drive.google.com/file/d/' + fileObj.id + '/preview?rm=minimal'; html = '<div class="iframe-wrapper" style="background:#fff;"><iframe src="' + pdfUrl + '"></iframe></div>'; }
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '" style="padding:0; background:#000;">' + html + '</div>');
+      timeline.push({ id: id, duration: SLIDE_DURATION, type: 'drive', fileId: fileObj.id, fileType: fileObj.type }); slideCountId++;
+    }
+
+    function createUrlSlide(targetUrl) {
+      var id = 'slide-url-' + slideCountId;
+      var container = document.getElementById('slides-container');
+      var html = '<div class="iframe-wrapper" style="background:#fff;"><iframe src="' + targetUrl + '" sandbox="allow-scripts allow-same-origin"></iframe></div>';
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '" style="padding:0; background:#000;">' + html + '</div>');
+      timeline.push({ id: id, duration: SLIDE_DURATION, type: 'url' });
+      slideCountId++;
+    }
+
+    function formatMeal(rawString, typeName) {
+      if (!rawString || rawString.trim() === '') return null; var parts = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ').split(',');
+      if (parts.length === 0 || parts[0].trim() === "") return null;
+      var sidesArr = []; for(var i = 1; i < parts.length; i++) { if (parts[i].trim() !== '') sidesArr.push(escapeHtml(parts[i].trim())); }
+      return '<div class="course-item"><div class="course-type">' + typeName + '</div><div class="course-main">' + escapeHtml(parts[0].trim()) + '</div>' + (sidesArr.length > 0 ? '<div class="course-sides">' + sidesArr.join(', ') + '</div>' : '') + '</div>';
+    }
+
+    function buildMenuSlides(jsonData) {
+      var now = new Date(); var currentDayOfWeek = now.getDay(); var col1Date = new Date(now); var col2Date = new Date(now);
+      var col1Title = 'Tänään'; var col2Title = 'Huomenna';
+      if (currentDayOfWeek === 5) { col2Date.setDate(now.getDate() + 3); col2Title = 'Maanantai'; } else if (currentDayOfWeek === 6) { col1Date.setDate(now.getDate() + 2); col2Date.setDate(now.getDate() + 3); col1Title = 'Maanantai'; col2Title = 'Tiistai'; } else if (currentDayOfWeek === 0) { col1Date.setDate(now.getDate() + 1); col2Date.setDate(now.getDate() + 2); col1Title = 'Maanantai'; col2Title = 'Tiistai'; } else { col2Date.setDate(now.getDate() + 1); }
+      var c1Str = col1Date.getDate() + '.' + (col1Date.getMonth() + 1) + '.'; var c2Str = col2Date.getDate() + '.' + (col2Date.getMonth() + 1) + '.';
+      var c1Obj = { lunch: null, veg: null, dinner: null }; var c2Obj = { lunch: null, veg: null, dinner: null };
+      var daysArray = (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu && jsonData.result.pageContext.menu.Days) ? jsonData.result.pageContext.menu.Days : [];
+
+      function parseDay(datePattern, targetObj) {
+        var dayData = null; for (var i = 0; i < daysArray.length; i++) { if (daysArray[i].Date && daysArray[i].Date.indexOf(datePattern) !== -1) { dayData = daysArray[i]; break; } }
+        if (!dayData || !dayData.Meals) return;
+        for (var j = 0; j < dayData.Meals.length; j++) { var type = (dayData.Meals[j].MealType || "").toLowerCase(); var name = dayData.Meals[j].Name || ""; if (type.indexOf('kasvis') !== -1) targetObj.veg = formatMeal(name, 'Kasvislounas'); else if (type.indexOf('päivällinen') !== -1 || type.indexOf('iltaruoka') !== -1) targetObj.dinner = formatMeal(name, 'Päivällinen'); else if (type.indexOf('lounas') !== -1 || !targetObj.lunch) targetObj.lunch = formatMeal(name, 'Lounas'); }
+      }
+      parseDay(c1Str, c1Obj); parseDay(c2Str, c2Obj);
+      var html = '<div class="menu-grid"><div class="day-col"><h2>' + col1Title + '</h2>';
+      if (c1Obj.lunch || c1Obj.veg || c1Obj.dinner) html += (c1Obj.lunch||'') + (c1Obj.veg||'') + (c1Obj.dinner||''); else html += '<div class="empty-menu">Ei tallennettua ruokalistaa.</div>';
+      html += '</div><div class="day-col"><h2>' + col2Title + '</h2>';
+      if (c2Obj.lunch || c2Obj.veg || c2Obj.dinner) html += (c2Obj.lunch||'') + (c2Obj.veg||'') + (c2Obj.dinner||''); else html += '<div class="empty-menu">Ruokalistaa ei ole julkaistu.</div>';
+      html += '</div></div>'; createSlideHtml(html);
+    }
+
+    function formatDayKey(dateObj) {
+      var daysArr = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai']; var monthsArr = ['tammi', 'helmi', 'maalis', 'huhti', 'touko', 'kesä', 'heinä', 'elo', 'syys', 'loka', 'marras', 'joulu'];
+      return daysArr[dateObj.getDay()] + ' ' + dateObj.getDate() + '. ' + monthsArr[dateObj.getMonth()];
+    }
+
+    function buildCalendarSlides(icalText) {
+      var events = []; var alerts = []; var now = new Date(); var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()); var cy = now.getFullYear(); var cm = now.getMonth(); var cd = now.getDate(); var tDate = new Date(); tDate.setDate(now.getDate() + 1); var ty = tDate.getFullYear(); var tm = tDate.getMonth(); var td = tDate.getDate();
+      var blocks = icalText.split('BEGIN:VEVENT');
+      for (var i = 1; i < blocks.length; i++) {
+        var summaryMatch = blocks[i].match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i); var dtstartMatch = blocks[i].match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i); var dtendMatch = blocks[i].match(/DTEND(?:;[^:]*)?:([^\r\n]*)/i); var locMatch = blocks[i].match(/LOCATION(?:;[^:]*)?:([^\r\n]*)/i);
+        if (!summaryMatch || !dtstartMatch) continue;
+        var fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' '); var dtstart = dtstartMatch[1]; var loc = locMatch ? locMatch[1].trim().substring(0, 25) : ''; var eDate = null; var endDate = null; var timeStr = ''; var isToday = false; var isTom = false;
+        if (dtstart.length === 8) {  
+          var y1 = parseInt(dtstart.substr(0,4), 10); var m1 = parseInt(dtstart.substr(4,2), 10) - 1; var d1 = parseInt(dtstart.substr(6,2), 10);
+          eDate = new Date(y1, m1, d1, 12, 0, 0); endDate = new Date(y1, m1, d1, 23, 59, 59); isToday = (y1 === cy && m1 === cm && d1 === cd); isTom = (y1 === ty && m1 === tm && d1 === td);
+        } else if (dtstart.indexOf('T') !== -1) {  
+          var p = dtstart.split('T'); var y2 = parseInt(p[0].substr(0,4), 10); var m2 = parseInt(p[0].substr(4,2), 10) - 1; var d2 = parseInt(p[0].substr(6,2), 10); var h2 = 0; var min2 = 0; var sec2 = 0; if (p[1].length >= 4) { h2 = parseInt(p[1].substr(0,2), 10); min2 = parseInt(p[1].substr(2,2), 10); } if (p[1].length >= 6) { sec2 = parseInt(p[1].substr(4,2), 10); }
+          if (dtstart.indexOf('Z') !== -1) { eDate = new Date(Date.UTC(y2, m2, d2, h2, min2, sec2)); } else { eDate = new Date(y2, m2, d2, h2, min2, sec2); }
+          var localH = eDate.getHours(); var localM = eDate.getMinutes(); timeStr = (localH < 10 ? '0' + localH : localH) + ':' + (localM < 10 ? '0' + localM : localM); var localYear = eDate.getFullYear(); var localMonth = eDate.getMonth(); var localDay = eDate.getDate(); isToday = (localYear === cy && localMonth === cm && localDay === cd); isTom = (localYear === ty && localMonth === tm && localDay === td);
+          if (dtendMatch) { var dte = dtendMatch[1]; if (dte.indexOf('T') !== -1) { var pe = dte.split('T'); var ye2 = parseInt(pe[0].substr(0,4), 10); var me2 = parseInt(pe[0].substr(4,2), 10) - 1; var de2 = parseInt(pe[0].substr(6,2), 10); var he2 = 0; var mine2 = 0; var sece2 = 0; if (pe[1].length >= 4) { he2 = parseInt(pe[1].substr(0,2), 10); mine2 = parseInt(pe[1].substr(2,2), 10); } if (pe[1].length >= 6) { sece2 = parseInt(pe[1].substr(4,2), 10); } endDate = (dte.indexOf('Z') !== -1) ? new Date(Date.UTC(ye2, me2, de2, he2, mine2, sece2)) : new Date(ye2, me2, de2, he2, mine2, sece2); } } if (!endDate && eDate) { endDate = new Date(eDate.getTime() + 60 * 60 * 1000); }
+        }
+        if (!eDate || isNaN(eDate.getTime()) || (eDate < todayStart && !isToday)) continue;
+        if (fullTitle.toUpperCase().indexOf('TIEDOTE:') === 0) { if (isToday) alerts.push(escapeHtml(fullTitle.substring(8).trim())); continue; }
+        events.push({ date: eDate, endDate: endDate, title: escapeHtml(fullTitle), time: timeStr, location: escapeHtml(loc), isToday: isToday, isTomorrow: isTom });
+      }
+      events.sort(function(a, b) { return a.date - b.date; }); allCalendarEvents = events; updateSidebar(); 
+      if (alerts.length > 0) { document.getElementById('ticker-container').style.display = 'flex'; var baseText = alerts.join(' /// '); var repArr = []; for (var a = 0; a < 8; a++) repArr.push(baseText); document.getElementById('ticker-text').innerHTML = repArr.join('   ///   '); }
+      if (events.length === 0) { createSlideHtml('<div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div>'); return; }
+      var tod = []; var tom = []; var lat = []; for (var e = 0; e < events.length; e++) { if (events[e].isToday) tod.push(events[e]); else if (events[e].isTomorrow) tom.push(events[e]); else { events[e].dayKey = formatDayKey(events[e].date); lat.push(events[e]); } }
+      function renderDayGroup(headerText, arr) { if (arr.length === 0) return ''; var headerClass = 'cal-date-header' + (headerText === 'Tänään' ? ' today-header' : ''); var displayHeader = headerText === 'Tänään' ? '▶ TÄNÄÄN' : headerText; var gHtml = '<div class="cal-day-group"><div class="' + headerClass + '">' + displayHeader + '</div>'; for (var idx = 0; idx < arr.length; idx++) { var timeDisp = arr[idx].time || 'Koko pv'; var locDisp = arr[idx].location ? ' (' + arr[idx].location + ')' : ''; gHtml += '<div class="cal-event-row"><div class="cal-time">' + timeDisp + '</div><div class="cal-title">' + arr[idx].title + locDisp + '</div></div>'; } return gHtml + '</div>'; }
+      var p1 = ''; if (tod.length > 0) p1 += renderDayGroup('Tänään', tod); if (tom.length > 0) p1 += renderDayGroup('Huomenna', tom); if (p1 !== '') createSlideHtml(p1);
+      if (lat.length > 0) { var grouped = {}; var order = []; for (var le = 0; le < lat.length; le++) { if (!grouped[lat[le].dayKey]) { grouped[lat[le].dayKey] = []; order.push(lat[le].dayKey); } grouped[lat[le].dayKey].push(lat[le]); } var cHtml = ''; var rows = 0; var maxS = 2; var sC = 0; for (var dk = 0; dk < order.length; dk++) { if (sC >= maxS) break; var dEvs = grouped[order[dk]]; var rNeed = dEvs.length + 1; if (rows + rNeed > 16 && cHtml !== '') { createSlideHtml(cHtml); sC++; cHtml = ''; rows = 0; if (sC >= maxS) break; } cHtml += renderDayGroup(order[dk], dEvs); rows += rNeed; } if (cHtml !== '' && sC < maxS) createSlideHtml(cHtml); }
+    }
+
+    function updatePagination() { var pagination = document.getElementById('pagination'); if (!pagination) return; var dotsHtml = ''; for (var p = 0; p < timeline.length; p++) { dotsHtml += '<div class="dot ' + (p === currentStep ? 'active' : '') + '"></div>'; } pagination.innerHTML = dotsHtml; if (timeline.length > 0) pagination.style.display = 'flex'; }
+    function initSlidesContainer() { var container = document.getElementById('slides-container'); if (!container) return; container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-0"></div>'); container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-1"></div>'); }
+
+    function preloadTimelineItem(idx) {
+      if (idx >= timeline.length) return; var step = timeline[idx];
+      if (step.type === 'gslides') {
+        if (step.playerId === undefined) { step.playerId = nextGPlayer; nextGPlayer = 1 - nextGPlayer; }
+        var container = document.getElementById('slide-gslides-' + step.playerId); var url = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
+        if (container && (!container.innerHTML || container.innerHTML.indexOf(step.slideId) === -1)) { container.innerHTML = '<iframe src="' + url + '" allowfullscreen></iframe>'; }
+      } else if (step.type === 'drive' && step.fileType === 'video') { var el = document.getElementById(step.id); if (el) { var vid = el.querySelector('video'); if (vid && vid.preload === 'none') { vid.preload = 'auto'; } } }
+    }
+
+    function startShow() { if (timeline.length === 0) return; updateClock(); updatePagination(); preloadTimelineItem(0); playTimeline(0); }
+    function checkFastStart() { if (menuReady && calReady) startShow(); }
+
+    function playTimeline(index) {
+      if (index >= timeline.length) { window.location.reload(true); return; }
+      currentStep = index; preloadTimelineItem(currentStep); var step = timeline[currentStep];
+      var activeElId = (step.type === 'gslides') ? 'slide-gslides-' + step.playerId : step.id;
+
+      var oldVids = document.querySelectorAll('video'); for(var v=0; v<oldVids.length; v++) { oldVids[v].pause(); }
+      var activeSlide = document.querySelector('.view-slide.active'); if (activeSlide && activeSlide.id !== activeElId) { activeSlide.classList.remove('active'); }
+      var nextSlideEl = document.getElementById(activeElId);
+      if (nextSlideEl) { nextSlideEl.classList.add('active'); var newVid = nextSlideEl.querySelector('video'); if (newVid) { newVid.currentTime = 0; newVid.play().catch(function(e){}); } }
+
+      updatePagination(); preloadTimelineItem(currentStep + 1);
+      if (timer) clearTimeout(timer); timer = setTimeout(function() { playTimeline(currentStep + 1); }, step.duration);
+    }
+
+    initSlidesContainer(); var menuReady = false; var calReady = false;
+    ajaxGet(WORKER_URL + '/menu', 'json', function(err, data) { if (!err && data && !data.error) { buildMenuSlides(data); } else { createSlideHtml('<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>'); } menuReady = true; checkFastStart(); });
+    ajaxGet(WORKER_URL + '/calendar', 'text', function(err, data) { if (!err && data) { buildCalendarSlides(data); } else { createSlideHtml('<div class="empty-menu">Kalenteri ei ole saatavilla.</div>'); } calReady = true; checkFastStart(); });
+
+    ajaxGet(GAS_SLIDES_URL, 'json', function(err, data) {
+      if (!err && data && data.success) {
+        if (data.mediaFiles && data.mediaFiles.length > 0) { for (var m = 0; m < data.mediaFiles.length; m++) { createDriveMediaSlide(data.mediaFiles[m]); } }
+        if (data.urlLinks && data.urlLinks.length > 0) { for (var u = 0; u < data.urlLinks.length; u++) { createUrlSlide(data.urlLinks[u]); } }
+        if (data.slideIds && data.slideIds.length > 0) { for (var i = 0; i < data.slideIds.length; i++) { timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: data.slideIds[i] }); } }
+      } else {
+        for (var f = 0; f < 3; f++) { timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides', slideId: '' }); }
+      }
+      updatePagination(); if (currentStep < timeline.length) preloadTimelineItem(currentStep + 1);
+    });
+
+    setTimeout(function() { if (timeline.length === 0) window.location.reload(true); }, 120000);
+
+  </script>
+</body>
+</html>
