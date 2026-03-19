@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mäkelänrinteen lukio - Info-TV</title>
+  <title>Märsky Info-TV</title>
   <style>
     :root {
-      --bg-color: #0b1120;
-      --panel-bg: rgba(255, 255, 255, 0.05);
+      --bg-color: #020617; /* Erittäin tumma, elegantti tausta */
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --text-secondary: #cbd5e1;
       --accent: #38bdf8;
-      --alert-color: #ef4444;
+      --accent-muted: rgba(56, 189, 248, 0.15);
+      --alert-color: #f87171;
       --header-height: 80px;
     }
     
@@ -20,81 +21,114 @@
     body, html { 
       height: 100vh; width: 100vw;
       background-color: var(--bg-color);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
       overflow: hidden; color: var(--text-main); 
     }
     
     /* Yläpalkki */
     #header { 
       position: absolute; top: 0; width: 100%; height: var(--header-height); 
-      background: #020617; display: flex; align-items: center; justify-content: space-between; 
-      padding: 0 50px; z-index: 1000; border-bottom: 1px solid #1e293b;
+      background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: space-between; 
+      padding: 0 60px; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .title { font-size: 2rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+    .title { 
+      font-size: 1.8rem; font-weight: 500; letter-spacing: 3px; 
+      color: var(--text-main); white-space: nowrap; 
+    }
 
     /* TICKER */
     #ticker-container {
-      flex-grow: 1; overflow: hidden; margin: 0 40px; display: none;
-      background: rgba(239, 68, 68, 0.15); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);
-      height: 50px; align-items: center;
+      flex-grow: 1; overflow: hidden; margin: 0 50px; display: none;
+      background: rgba(248, 113, 113, 0.1); border-radius: 6px; 
+      height: 40px; align-items: center;
     }
     .ticker-text {
-      white-space: nowrap; font-size: 1.8rem; font-weight: 600; color: var(--alert-color);
-      animation: ticker 15s linear infinite; padding-left: 100%;
+      white-space: nowrap; font-size: 1.4rem; font-weight: 500; letter-spacing: 1px; color: var(--alert-color);
+      animation: ticker 20s linear infinite; padding-left: 100%; text-transform: uppercase;
     }
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-200%); } }
     
-    #clock { font-size: 1.8rem; font-weight: 400; color: var(--text-muted); white-space: nowrap; }
+    #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: var(--text-muted); white-space: nowrap; }
     
     /* Näkymät */
-    #slides-container { width: 100%; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); position: relative; }
+    #slides-container { 
+      width: 100%; height: calc(100vh - var(--header-height)); 
+      margin-top: var(--header-height); position: relative; 
+    }
     
     .view-slide {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+      opacity: 0; visibility: hidden; transition: opacity 0.6s ease;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(circle at center, #0f172a 0%, var(--bg-color) 100%);
     }
     .view-slide.active { opacity: 1; visibility: visible; z-index: 10; }
     
+    /* Pääsisältöalueen uusi tyylikäs laatikko */
     .content { 
-      background: var(--panel-bg); border: 1px solid #1e293b;
-      margin: 0 auto; padding: 60px; border-radius: 16px; width: 85%; max-width: 1600px; 
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
+      background: rgba(30, 41, 59, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin: 0 auto; padding: 70px 90px; border-radius: 24px; width: 88%; max-width: 1700px; 
+      backdrop-filter: blur(20px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
     
-    h1 { font-size: 3rem; margin-bottom: 50px; color: var(--accent); font-weight: 300; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
-    h2 { font-size: 2.5rem; font-weight: 500; margin: 30px 0 10px 0; }
-    
-    .data-item { 
-      font-size: 2.2rem; margin: 20px 0; padding: 20px 30px; background: rgba(255,255,255,0.03); 
-      border-radius: 8px; border-left: 4px solid var(--accent); font-weight: 300; line-height: 1.4;
+    h1 { 
+      font-size: 2.8rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; 
+      color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.1); 
+      padding-bottom: 25px; margin-bottom: 50px; 
     }
+
+    /* ---- RUOKALISTA (Grid-asettelu) ---- */
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+    .day-col h2 { 
+      font-size: 1.4rem; color: var(--accent); text-transform: uppercase; 
+      letter-spacing: 2px; font-weight: 600; margin-bottom: 35px; opacity: 0.9;
+    }
+    .course-item { margin-bottom: 30px; }
+    .course-type { font-size: 1rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1.5px; margin-bottom: 6px; }
+    .course-main { font-size: 2.2rem; font-weight: 400; color: var(--text-main); line-height: 1.3; }
+    .course-sides { font-size: 1.3rem; color: var(--text-muted); margin-top: 8px; font-weight: 300; }
+    .empty-menu { font-size: 1.8rem; color: var(--text-muted); font-weight: 300; font-style: italic; }
     
-    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; }
+    /* ---- KALENTERI (Puhdas lista) ---- */
+    .cal-day-group { margin-bottom: 40px; }
+    .cal-date-header { 
+      font-size: 1.3rem; color: var(--accent); text-transform: uppercase; 
+      letter-spacing: 2px; margin-bottom: 20px; font-weight: 600;
+    }
+    .cal-event-row { display: flex; align-items: baseline; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .cal-event-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .cal-time { font-size: 1.8rem; font-weight: 500; color: var(--text-main); width: 140px; flex-shrink: 0; }
+    .cal-title { font-size: 1.8rem; font-weight: 300; color: var(--text-secondary); line-height: 1.4; }
+
+    /* ---- IFRAME ---- */
+    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: #000; }
     iframe { width: 100%; height: 100%; border: none; }
     
-    /* Paginointi (pallot) */
+    /* ---- PAGINOINTI ---- */
     #pagination {
-      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 15px; z-index: 1000;
-      background: rgba(2, 6, 23, 0.7); padding: 15px 30px; border-radius: 30px; backdrop-filter: blur(5px);
+      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; z-index: 1000;
+      background: rgba(2, 6, 23, 0.6); padding: 12px 25px; border-radius: 30px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.05);
     }
-    .dot { width: 15px; height: 15px; border-radius: 50%; background: #475569; transition: all 0.3s; }
-    .dot.active { background: var(--accent); transform: scale(1.3); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; transition: all 0.4s ease; }
+    .dot.active { background: var(--accent); transform: scale(1.5); box-shadow: 0 0 10px var(--accent-muted); }
   </style>
 </head>
 <body>
   <div id="header">
-    <div class="title">Mäkelänrinteen lukio</div>
+    <div class="title">TERVETULOA MÄRSKYYN</div>
     <div id="ticker-container"><div class="ticker-text" id="ticker-text"></div></div>
-    <div id="clock">Ladataan...</div>
+    <div id="clock">Kello...</div>
   </div>
 
   <div id="slides-container">
     <div class="view-slide active" id="loading-slide">
-      <div class="content"><div style="font-size: 2rem; color: var(--text-muted); text-align: center;">Ladataan Info-TV:tä...</div></div>
+      <div class="content" style="padding: 40px; text-align: center; border: none; background: transparent; box-shadow: none;">
+        <div style="font-size: 1.5rem; color: var(--text-muted); font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">Käynnistetään Info-TV...</div>
+      </div>
     </div>
-    <!-- Tänne generoidaan diat -->
   </div>
 
   <div id="pagination" style="display: none;"></div>
@@ -105,8 +139,8 @@
     const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
     const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
     
-    const INFO_DURATION = 8000; // Ruokalista & Kalenteri
-    const SLIDE_DURATION = 12000; // Google Slides per dia
+    const INFO_DURATION = 8000; 
+    const SLIDE_DURATION = 12000; 
 
     let timeline = [];
     let currentStep = 0;
@@ -117,63 +151,29 @@
       const now = new Date();
       document.getElementById('clock').textContent = 
         now.toLocaleDateString('fi-FI', {weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric'}) + 
-        ' klo ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
+        '   ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
     };
     setInterval(updateClock, 1000);
     updateClock();
 
-    // --- APUFUNKTIOT PARSINTAAN ---
-    const formatMeal = (rawString) => {
+    // --- RUOKALISTAN PARSINTA (Ilman emojia) ---
+    const formatMeal = (rawString, typeName) => {
       if (!rawString || rawString.trim() === '') return null;
       let cleanStr = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ');
       const parts = cleanStr.split(',');
       if (parts.length === 0 || parts[0].trim() === "") return null;
       const mainMeal = parts[0].trim();
       const sides = parts.slice(1).map(s => s.trim()).filter(s => s).join(', ');
-      return sides ? `<span style="font-weight:500;">${mainMeal}</span><br><span style="font-size:0.7em; color:var(--text-muted);">${sides}</span>` 
-                   : `<span style="font-weight:500;">${mainMeal}</span>`;
+      
+      return `
+        <div class="course-item">
+          <div class="course-type">${typeName}</div>
+          <div class="course-main">${mainMeal}</div>
+          ${sides ? `<div class="course-sides">${sides}</div>` : ''}
+        </div>
+      `;
     };
 
-    const parseIcal = (icalText) => {
-      const events = [];
-      const alerts = [];
-      const now = new Date();
-      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-      const blocks = icalText.split('BEGIN:VEVENT').slice(1);
-      blocks.forEach(block => {
-        const summaryMatch = block.match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i);
-        const dtstartMatch = block.match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i);
-        if (!summaryMatch || !dtstartMatch) return;
-        
-        const fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' ');
-        const dtstart = dtstartMatch[1];
-        let eventDate, timeStr = '';
-
-        if (dtstart.length === 8) {  
-          eventDate = new Date(parseInt(dtstart.substr(0,4)), parseInt(dtstart.substr(4,2)) - 1, parseInt(dtstart.substr(6,8)));
-        } else if (dtstart.includes('T')) {  
-          const parts = dtstart.split('T');
-          eventDate = new Date(parseInt(parts[0].substr(0,4)), parseInt(parts[0].substr(4,2)) - 1, parseInt(parts[0].substr(6,2)));
-          if (parts[1].length >= 4) timeStr = `${parts[1].substr(0,2)}:${parts[1].substr(2,2)}`;
-        }
-
-        const isToday = eventDate && eventDate.toDateString() === now.toDateString();
-        if (!eventDate || isNaN(eventDate.getTime()) || (eventDate < new Date(now.setHours(0,0,0,0)) && !isToday) || eventDate > nextWeek) return;
-
-        if (fullTitle.toUpperCase().startsWith('TIEDOTE:')) {
-          if (isToday) alerts.push(fullTitle.substring(8).trim()); 
-          return; 
-        }
-
-        events.push({ date: eventDate, title: fullTitle.substring(0,40), time: timeStr });
-      });
-
-      events.sort((a, b) => a.date - b.date);
-      return { events, alerts };
-    };
-
-    // --- NÄKYMIEN RAKENNUS ---
     const buildMenuSlides = (jsonData) => {
       const container = document.getElementById('slides-container');
       const now = new Date();
@@ -192,114 +192,239 @@
         dayData.Meals.forEach(meal => {
           const type = (meal.MealType || "").toLowerCase();
           const name = meal.Name || "";
-          if (type.includes('kasvis')) targetObj.veg = formatMeal(name);
-          else if (type.includes('päivällinen') || type.includes('iltaruoka')) targetObj.dinner = formatMeal(name);
-          else if (type.includes('lounas') || !targetObj.lunch) targetObj.lunch = formatMeal(name);
+          if (type.includes('kasvis')) targetObj.veg = formatMeal(name, 'Kasvislounas');
+          else if (type.includes('päivällinen') || type.includes('iltaruoka')) targetObj.dinner = formatMeal(name, 'Päivällinen');
+          else if (type.includes('lounas') || !targetObj.lunch) targetObj.lunch = formatMeal(name, 'Lounas');
         });
       };
       
       parseDay(todayStr, todayMeals);
       parseDay(tomorrowStr, tomorrowMeals);
 
-      let html = `<div class="view-slide" id="slide-menu"><div class="content"><h1>Päivän lounas</h1>`;
+      let html = `<div class="view-slide" id="slide-menu"><div class="content"><h1>Päivän Ruokalista</h1><div class="menu-grid">`;
       
-      html += `<h2>Tänään</h2>`;
-      if (todayMeals.lunch) html += `<div class="data-item">🥗 ${todayMeals.lunch}</div>`;
-      if (todayMeals.veg) html += `<div class="data-item">🌱 ${todayMeals.veg}</div>`;
-      if (todayMeals.dinner) html += `<div class="data-item">🍲 ${todayMeals.dinner}</div>`;
-      if (!todayMeals.lunch && !todayMeals.dinner) html += `<div class="data-item">Tälle päivälle ei ole tallennettu ruokalistaa.</div>`;
+      // Tänään sarake
+      html += `<div class="day-col"><h2>Tänään</h2>`;
+      const todayHasFood = todayMeals.lunch || todayMeals.veg || todayMeals.dinner;
+      if (todayMeals.lunch) html += todayMeals.lunch;
+      if (todayMeals.veg) html += todayMeals.veg;
+      if (todayMeals.dinner) html += todayMeals.dinner;
+      if (!todayHasFood) html += `<div class="empty-menu">Ei tallennettua ruokalistaa tälle päivälle.</div>`;
+      html += `</div>`;
 
-      html += `<h2>Huomenna</h2>`;
-      if (tomorrowMeals.lunch) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🥗 ${tomorrowMeals.lunch}</div>`;
-      if (tomorrowMeals.veg) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🌱 ${tomorrowMeals.veg}</div>`;
-      if (tomorrowMeals.dinner) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🍲 ${tomorrowMeals.dinner}</div>`;
-      if (!tomorrowMeals.lunch && !tomorrowMeals.dinner) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">Huomisen ruokalistaa ei ole julkaistu.</div>`;
-      
-      html += `</div></div>`;
+      // Huomenna sarake
+      html += `<div class="day-col"><h2>Huomenna</h2>`;
+      const tomorrowHasFood = tomorrowMeals.lunch || tomorrowMeals.veg || tomorrowMeals.dinner;
+      if (tomorrowMeals.lunch) html += tomorrowMeals.lunch;
+      if (tomorrowMeals.veg) html += tomorrowMeals.veg;
+      if (tomorrowMeals.dinner) html += tomorrowMeals.dinner;
+      if (!tomorrowHasFood) html += `<div class="empty-menu">Huomisen ruokalistaa ei ole julkaistu.</div>`;
+      html += `</div>`;
+
+      html += `</div></div></div>`;
       container.insertAdjacentHTML('beforeend', html);
       timeline.push({ id: 'slide-menu', duration: INFO_DURATION });
     };
 
+      // --- KALENTERIN PARSINTA (Tänään/Huomenna + Seuraavat Tapahtumat) ---
     const buildCalendarSlides = (icalText) => {
       const container = document.getElementById('slides-container');
-      const { events, alerts } = parseIcal(icalText);
+      const events = [];
+      const alerts = [];
+      
+      // Asetetaan nykyhetki siten, että menneet tapahtumat voidaan suodattaa
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentDay = now.getDate();
+
+      const tomorrowDate = new Date(now);
+      tomorrowDate.setDate(now.getDate() + 1);
+      const tomorrowYear = tomorrowDate.getFullYear();
+      const tomorrowMonth = tomorrowDate.getMonth();
+      const tomorrowDay = tomorrowDate.getDate();
+
+      const blocks = icalText.split('BEGIN:VEVENT').slice(1);
+      blocks.forEach(block => {
+        const summaryMatch = block.match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i);
+        const dtstartMatch = block.match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i);
+        if (!summaryMatch || !dtstartMatch) return;
+        
+        const fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' ');
+        const dtstart = dtstartMatch[1];
+        let eventDate, timeStr = '';
+        let isToday = false;
+        let isTomorrow = false;
+
+        if (dtstart.length === 8) {  
+          const y = parseInt(dtstart.substr(0,4));
+          const m = parseInt(dtstart.substr(4,2)) - 1;
+          const d = parseInt(dtstart.substr(6,8));
+          eventDate = new Date(y, m, d, 12, 0, 0); 
+          isToday = (y === currentYear && m === currentMonth && d === currentDay);
+          isTomorrow = (y === tomorrowYear && m === tomorrowMonth && d === tomorrowDay);
+        } else if (dtstart.includes('T')) {  
+          const parts = dtstart.split('T');
+          const y = parseInt(parts[0].substr(0,4));
+          const m = parseInt(parts[0].substr(4,2)) - 1;
+          const d = parseInt(parts[0].substr(6,2));
+          eventDate = new Date(y, m, d);
+          if (parts[1].length >= 4) timeStr = `${parts[1].substr(0,2)}:${parts[1].substr(2,2)}`;
+          isToday = (y === currentYear && m === currentMonth && d === currentDay);
+          isTomorrow = (y === tomorrowYear && m === tomorrowMonth && d === tomorrowDay);
+        }
+
+        // POISTETTU NEXTWEEK-RAJOITUS. Suodatetaan vain menneet tapahtumat pois (isToday sallitaan).
+        if (!eventDate || isNaN(eventDate.getTime()) || (eventDate < todayStart && !isToday)) return;
+
+        if (fullTitle.toUpperCase().startsWith('TIEDOTE:')) {
+          if (isToday) alerts.push(fullTitle.substring(8).trim()); 
+          return; 
+        }
+        
+        events.push({ 
+            date: eventDate, 
+            title: fullTitle.substring(0,60), 
+            time: timeStr,
+            isToday: isToday,
+            isTomorrow: isTomorrow
+        });
+      });
+
+      events.sort((a, b) => a.date - b.date);
+
+      // Tiedotteet tickeriin
       if (alerts.length > 0) {
         document.getElementById('ticker-container').style.display = 'flex';
-        document.getElementById('ticker-text').textContent = "⚠️ " + alerts.join('  |  ⚠️ ') + " ⚠️";
+        const alertText = alerts.join('  •  ');
+        document.getElementById('ticker-text').textContent = `TIEDOTE: ${alertText}      TIEDOTE: ${alertText}`;
       }
 
       if (events.length === 0) {
-        container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-1"><div class="content"><h1>Tulevat tapahtumat</h1><div class="data-item">Ei tapahtumia seuraavan 7 päivän aikana.</div></div></div>`);
+        container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-1"><div class="content"><h1>Seuraavat Tapahtumat</h1><div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div></div></div>`);
         timeline.push({ id: 'slide-cal-1', duration: INFO_DURATION });
         return;
       }
 
-      // Ryhmittele päivittäin
-      const grouped = {};
+      const todayEvents = [];
+      const tomorrowEvents = [];
+      const laterEvents = [];
+
       events.forEach(ev => {
-        const dayKey = ev.date.toLocaleDateString('fi-FI', { weekday: 'long', day: 'numeric', month: 'short' });
-        const capitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-        if (!grouped[capitalized]) grouped[capitalized] = [];
-        grouped[capitalized].push(`  ⏰ ${ev.time} • ${ev.title}`);
+          if (ev.isToday) todayEvents.push(ev);
+          else if (ev.isTomorrow) tomorrowEvents.push(ev);
+          else {
+              // Koska voimme mennä ensi kuuhun, näytetään kuukausi lyhennettynä
+              const dayKey = ev.date.toLocaleDateString('fi-FI', { weekday: 'long', day: 'numeric', month: 'short' });
+              laterEvents.push({ ...ev, dayKey });
+          }
       });
 
-      // Rakenna diat (max 6 riviä per dia)
-      let currentLines = [];
       let slideCount = 1;
-      
-      const flushSlide = () => {
-        if (currentLines.length === 0) return;
-        const id = `slide-cal-${slideCount}`;
-        const html = currentLines.map(line => line.startsWith('  ⏰') ? `<div class="data-item" style="margin-left:30px; font-size:2rem;">${line}</div>` : `<h2>${line}</h2>`).join('');
-        container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="${id}"><div class="content"><h1>Tulevat tapahtumat</h1>${html}</div></div>`);
-        timeline.push({ id, duration: INFO_DURATION });
-        slideCount++;
-        currentLines = [];
+
+      const createSlideHtml = (title, htmlContent) => {
+          const id = `slide-cal-${slideCount}`;
+          container.insertAdjacentHTML('beforeend', `
+            <div class="view-slide" id="${id}">
+                <div class="content">
+                    <h1>${title}</h1>
+                    ${htmlContent || '<div class="empty-menu">Ei tapahtumia.</div>'}
+                </div>
+            </div>`);
+          timeline.push({ id, duration: INFO_DURATION });
+          slideCount++;
       };
 
-      for (const [day, items] of Object.entries(grouped)) {
-        if (currentLines.length >= 5) flushSlide();
-        currentLines.push(day);
-        items.forEach(item => {
-          if (currentLines.length >= 6) flushSlide();
-          currentLines.push(item);
-        });
+      const renderDayGroup = (headerText, dayEvents) => {
+          if (dayEvents.length === 0) return '';
+          let html = `<div class="cal-day-group"><div class="cal-date-header">${headerText}</div>`;
+          dayEvents.forEach(ev => {
+              const timeDisplay = ev.time || 'Koko pv';
+              html += `<div class="cal-event-row"><div class="cal-time">${timeDisplay}</div><div class="cal-title">${ev.title}</div></div>`;
+          });
+          return html + `</div>`;
+      };
+
+      // --- SIVU 1: TÄNÄÄN JA HUOMENNA ---
+      let page1Html = '';
+      if (todayEvents.length > 0) page1Html += renderDayGroup('Tänään', todayEvents);
+      if (tomorrowEvents.length > 0) page1Html += renderDayGroup('Huomenna', tomorrowEvents);
+      
+      if (page1Html !== '') {
+          createSlideHtml('Tapahtumat: Tänään & Huomenna', page1Html);
       }
-      flushSlide();
+
+      // --- SIVUT 2+: SEURAAVAT TAPAHTUMAT (Max 14 tapahtumaa/otsikkoa per dia) ---
+      if (laterEvents.length > 0) {
+          const groupedLater = {};
+          laterEvents.forEach(ev => {
+              if (!groupedLater[ev.dayKey]) groupedLater[ev.dayKey] = [];
+              groupedLater[ev.dayKey].push(ev);
+          });
+
+          let currentLaterHtml = '';
+          let rowsOnCurrentPage = 0;
+          const MAX_ROWS = 14; 
+          
+          // Halutaan näyttää korkeintaan esim. 2 "Seuraavat tapahtumat" -diaa (eli n. 28 riviä),
+          // jotta Info-TV ei pyöritä loputtomiin ensi vuoden kalenteria
+          let maxLaterSlides = 2; 
+          let laterSlidesCreated = 0;
+
+          for (const [dayKey, dayEvents] of Object.entries(groupedLater)) {
+              if (laterSlidesCreated >= maxLaterSlides) break;
+
+              const rowsNeeded = dayEvents.length + 1; 
+
+              if (rowsOnCurrentPage + rowsNeeded > MAX_ROWS && currentLaterHtml !== '') {
+                  createSlideHtml('Seuraavat Tapahtumat', currentLaterHtml);
+                  laterSlidesCreated++;
+                  currentLaterHtml = '';
+                  rowsOnCurrentPage = 0;
+                  if (laterSlidesCreated >= maxLaterSlides) break;
+              }
+
+              currentLaterHtml += renderDayGroup(dayKey, dayEvents);
+              rowsOnCurrentPage += rowsNeeded;
+          }
+          
+          if (currentLaterHtml !== '' && laterSlidesCreated < maxLaterSlides) {
+              createSlideHtml('Seuraavat Tapahtumat', currentLaterHtml);
+          }
+      }
     };
 
-    // --- PÄÄLOGIIKKA ---
+    // --- PÄIVITYS JA ALUSTUS ---
+    const updateDotsUI = () => {
+      document.getElementById('pagination').innerHTML = timeline.map(() => `<div class="dot"></div>`).join('');
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
+    };
+
     const initApp = async () => {
+      // 1. Käynnistetään GAS-haku heti taustalla, jottei se hidasta sivun renderöintiä!
+      const gasPromise = fetch(GAS_SLIDES_URL).then(r => r.json()).catch(() => ({ slideCount: 5 }));
+
       try {
-        const [menuRes, calRes, gasRes] = await Promise.allSettled([
+        // 2. Odotetaan ainoastaan supernopeita Worker-hakuja
+        const [menuRes, calRes] = await Promise.allSettled([
           fetch(`${WORKER_URL}/menu`).then(r => r.json()),
-          fetch(`${WORKER_URL}/calendar`).then(r => r.text()),
-          fetch(GAS_SLIDES_URL).then(r => r.json())
+          fetch(`${WORKER_URL}/calendar`).then(r => r.text())
         ]);
 
-        // 1. Ruokalista
-        if (menuRes.status === 'fulfilled' && !menuRes.value.error) {
-          buildMenuSlides(menuRes.value);
-        } else {
-          document.getElementById('slides-container').insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-menu"><div class="content"><h1>Päivän lounas</h1><div class="data-item">Ruokalistaa ei saatu ladattua.</div></div></div>`);
-          timeline.push({ id: 'slide-menu', duration: INFO_DURATION });
-        }
+        if (menuRes.status === 'fulfilled' && !menuRes.value.error) buildMenuSlides(menuRes.value);
+        if (calRes.status === 'fulfilled' && calRes.value) buildCalendarSlides(calRes.value);
 
-        // 2. Kalenteri
-        if (calRes.status === 'fulfilled' && calRes.value && !calRes.value.startsWith('Kalenteri ei')) {
-          buildCalendarSlides(calRes.value);
-        } else {
-          document.getElementById('slides-container').insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-error"><div class="content"><h1>Tulevat tapahtumat</h1><div class="data-item">Kalenteri ei saatavilla.</div></div></div>`);
-          timeline.push({ id: 'slide-cal-error', duration: INFO_DURATION });
-        }
+        // 3. Näytä sivu välittömästi, kun Info-data on valmis!
+        document.getElementById('pagination').style.display = 'flex';
+        playTimeline(0); 
 
-        // 3. Google Slides
-        let slidesCount = 1;
-        if (gasRes.status === 'fulfilled' && gasRes.value.slideCount) {
-          slidesCount = gasRes.value.slideCount;
-        }
+        // 4. Odotellaan kaikessa rauhassa GAS:in vastausta taustalla
+        const gasRes = await gasPromise;
+        const slidesCount = gasRes.slideCount || 5;
 
+        // 5. Rakennetaan iframe ja lisätään diat reitin loppuun
         const iframeUrl = `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=${SLIDE_DURATION}&rm=minimal`;
         document.getElementById('slides-container').insertAdjacentHTML('beforeend', `
           <div class="view-slide iframe-wrapper" id="slide-gslides">
@@ -310,16 +435,12 @@
         for(let i = 0; i < slidesCount; i++) {
           timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION });
         }
-
-        // Pallot
-        document.getElementById('pagination').innerHTML = timeline.map(() => `<div class="dot"></div>`).join('');
-        document.getElementById('pagination').style.display = 'flex';
         
-        playTimeline(0);
+        // Päivitetään pallot näkymään (nyt mukana myös Google Slidesit)
+        updateDotsUI();
 
       } catch (e) {
-        console.error("Latausvirhe", e);
-        setTimeout(() => window.location.reload(), 30000);
+        setTimeout(() => window.location.reload(), 15000);
       }
     };
 
@@ -335,7 +456,7 @@
       if (activeSlide && activeSlide.id !== step.id) activeSlide.classList.remove('active');
       document.getElementById(step.id).classList.add('active');
 
-      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
+      updateDotsUI();
 
       clearTimeout(timer);
       timer = setTimeout(() => playTimeline(currentStep + 1), step.duration);
