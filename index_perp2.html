@@ -39,16 +39,21 @@
 
     /* TICKER */
     #ticker-container {
-      flex-grow: 1; overflow: hidden; margin: 0 50px; display: none;
-      background: rgba(248, 113, 113, 0.1); border-radius: 6px; 
-      height: 40px; align-items: center;
+      flex-grow: 1; overflow: hidden; margin: 0 40px; display: none;
+      background: transparent; /* Tausta poistettu */
+      height: 100%; align-items: center; position: relative;
     }
     .ticker-text {
-      white-space: nowrap; font-size: 1.4rem; font-weight: 500; letter-spacing: 1px; color: var(--alert-color);
-      animation: ticker 20s linear infinite; padding-left: 100%; text-transform: uppercase;
+      white-space: nowrap; font-size: 1.6rem; font-weight: 500; letter-spacing: 2px; 
+      color: var(--alert-color); text-transform: uppercase;
+      position: absolute;
+      animation: ticker 30s linear infinite; /* Pidennetty aika pidemmälle nauhalle */
     }
-    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-200%); } }
-    
+    @keyframes ticker { 
+      0% { left: 100%; } 
+      100% { left: -300%; } /* Menee tarpeeksi pitkälle vasemmalle */
+    }
+
     #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: var(--text-muted); white-space: nowrap; }
     
     /* Näkymät */
@@ -295,12 +300,21 @@
 
       events.sort((a, b) => a.date - b.date);
 
-      // Tiedotteet tickeriin
+      // Tiedotteet tickeriin (Loputon nauha ilman taustaa ja TIEDOTE-sanaa)
       if (alerts.length > 0) {
         document.getElementById('ticker-container').style.display = 'flex';
-        const alertText = alerts.join('  •  ');
-        document.getElementById('ticker-text').textContent = `TIEDOTE: ${alertText}      TIEDOTE: ${alertText}`;
+        
+        // Yhdistetään useampi tiedote, jos niitä on monta tälle päivälle
+        const baseText = alerts.join(' /// ');
+        
+        // Monistetaan tekstiä riittävän monta kertaa, jotta siitä tulee yksi saumaton, 
+        // pitkä jono, jossa on selkeä erotin kierrosten välissä.
+        const separator = "   ///   ";
+        const repeatedText = Array(8).fill(baseText).join(separator);
+        
+        document.getElementById('ticker-text').textContent = repeatedText;
       }
+
 
       if (events.length === 0) {
         container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-1"><div class="content"><h1>Seuraavat Tapahtumat</h1><div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div></div></div>`);
