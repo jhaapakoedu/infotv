@@ -179,7 +179,7 @@
 
     function createDriveMediaSlide(fileObj) {
       var id = 'slide-media-' + slideCountId; var container = document.getElementById('slides-container'); var html = '';
-      if (fileObj.type === 'video') { var directUrl = 'https://drive.google.com/uc?export=download&id=' + fileObj.id; html = '<video class="media-video" autoplay muted loop preload="none"><source src="' + directUrl + '" type="video/mp4"></video>'; } 
+      if (fileObj.type === 'video') { var directUrl = 'https://drive.google.com/uc?export=download&id=' + fileObj.id; html = '<video class="media-video" autoplay muted loop playsinline preload="none"><source src="' + directUrl + '" type="video/mp4"></video>'; } 
       else if (fileObj.type === 'image') { var imgUrl = 'https://drive.google.com/uc?export=view&id=' + fileObj.id; html = '<div class="media-image" style="background-image: url(\'' + imgUrl + '\');"></div>'; } 
       else if (fileObj.type === 'pdf') { var pdfUrl = 'https://drive.google.com/file/d/' + fileObj.id + '/preview?rm=minimal'; html = '<div class="iframe-wrapper" style="background:#fff;"><iframe src="' + pdfUrl + '"></iframe></div>'; }
       container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '" style="padding:0; background:#000;">' + html + '</div>');
