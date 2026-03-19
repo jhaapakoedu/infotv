@@ -91,18 +91,16 @@
     }
 
     // Hae kalenteri
-    async function loadCalendar() {
-      try {
-        const res = await fetch(`${WORKER_URL}/calendar`);
-        const events = await res.json();
-        const html = events.map(e => 
-          `<div class="data-item">${e.title || 'Tapahtuma'}</div>`
-        ).join('');
-        document.getElementById('calendar-data').innerHTML = html || '<div class="data-item">Ei tapahtumia</div>';
-      } catch(e) {
-        document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei saatavilla</div>';
-      }
-    }
+async function loadCalendar() {
+  try {
+    const res = await fetch(`${WORKER_URL}/calendar`);
+    const events = await res.json();
+    const html = events.map(e => `<div class="data-item">${e.title}</div>`).join('');
+    document.getElementById('calendar-data').innerHTML = html;
+  } catch(e) {
+    document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei saatavilla</div>';
+  }
+}
 
     // Pääsilmukka
     async function runLoop() {
