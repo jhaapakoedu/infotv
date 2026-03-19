@@ -29,9 +29,15 @@
     }
     
     #sidebar-calendar { flex-grow: 1; padding: 20px 10px; overflow: hidden; }
-
-    #sidebar-hsl { height: 350px; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); background: #020617; overflow: hidden; flex-shrink: 0; }
-    #sidebar-hsl iframe { width: 100%; height: 100%; border: none; }
+#sidebar-hsl { height: 350px; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); background: #020617; overflow: hidden; flex-shrink: 0; position: relative; }
+/* Annetaan iframelle leveämpi tila ja kutistetaan se mahtumaan palkkiin */
+#sidebar-hsl iframe { 
+  width: 320px; 
+  height: 790px; 
+  border: none; 
+  transform: scale(0.443); /* 142px jaettuna 320px = n. 0.443 */
+  transform-origin: top left;
+}
 
     #slides-container { flex-grow: 1; position: relative; overflow: hidden; background: #000; }
     
@@ -166,7 +172,7 @@
     function createDriveMediaSlide(fileObj) {
       var id = 'slide-media-' + slideCountId; var container = document.getElementById('slides-container'); var html = '';
       if (fileObj.type === 'video') { var directUrl = 'https://drive.google.com/uc?export=download&id=' + fileObj.id; html = '<video class="media-video" autoplay muted loop playsinline preload="none"><source src="' + directUrl + '" type="video/mp4"></video>'; } 
-      else if (fileObj.type === 'image') { var imgUrl = 'https://drive.google.com/uc?export=view&id=' + fileObj.id; html = '<div class="media-image" style="background-image: url(\'' + imgUrl + '\');"></div>'; } 
+      else if (fileObj.type === 'image') { var imgUrl = 'https://drive.google.com/thumbnail?id=' + fileObj.id + '&sz=w1920-h1080'; html = '<div class="media-image" style="background-image: url(\'' + imgUrl + '\');"></div>'; }
       else if (fileObj.type === 'pdf') { var pdfUrl = 'https://drive.google.com/file/d/' + fileObj.id + '/preview?rm=minimal'; html = '<div class="iframe-wrapper" style="background:#fff;"><iframe src="' + pdfUrl + '"></iframe></div>'; }
       container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '" style="padding:0; background:#000;">' + html + '</div>');
       timeline.push({ id: id, duration: SLIDE_DURATION, type: 'drive', fileId: fileObj.id, fileType: fileObj.type }); slideCountId++;
