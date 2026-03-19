@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mäkelänrinteen lukio - Info-TV</title>
   <style>
-    /* MODERNI JA AMMATTIMAINEN ULKOASU (16:9 optimoitu) */
     :root {
       --bg-color: #0b1120;
       --panel-bg: rgba(255, 255, 255, 0.05);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent: #38bdf8;
+      --alert-color: #ef4444; /* Punainen tiedoteväri */
       --header-height: 80px;
     }
     
@@ -47,88 +47,76 @@
       color: var(--text-main);
       letter-spacing: 1px;
       text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* TICKER / TIEDOTE */
+    #ticker-container {
+      flex-grow: 1;
+      overflow: hidden;
+      margin: 0 40px;
+      display: none; /* Piilotettu oletuksena */
+      background: rgba(239, 68, 68, 0.15);
+      border-radius: 8px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      height: 50px;
+      align-items: center;
+    }
+    
+    .ticker-text {
+      white-space: nowrap;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--alert-color);
+      animation: ticker 15s linear infinite;
+      padding-left: 100%; /* Aloittaa ruudun oikeasta reunasta */
+    }
+
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-200%); }
     }
     
     #clock { 
       font-size: 1.8rem; 
       font-weight: 400; 
       color: var(--text-muted); 
+      white-space: nowrap;
     }
     
-    /* Näkymien asettelu (16:9 pohja) */
-    .view { 
-      display: none; 
-      width: 100%; 
-      height: 100vh; 
-      padding-top: var(--header-height); 
-    }
-    .view.active { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-    }
+    /* Näkymien asettelu */
+    .view { display: none; width: 100%; height: 100vh; padding-top: var(--header-height); }
+    .view.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
-    /* Sisältölaatikot */
     .content { 
-      background: var(--panel-bg);
-      border: 1px solid #1e293b;
-      margin: 0 auto; 
-      padding: 60px; 
-      border-radius: 16px; 
-      width: 85%; 
-      max-width: 1600px; 
+      background: var(--panel-bg); border: 1px solid #1e293b;
+      margin: 0 auto; padding: 60px; border-radius: 16px; width: 85%; max-width: 1600px; 
       box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
     }
     
-    h1 { 
-      font-size: 3rem; 
-      margin-bottom: 50px; 
-      text-align: left; 
-      color: var(--accent);
-      font-weight: 300;
-      border-bottom: 1px solid #1e293b;
-      padding-bottom: 20px;
-    }
+    h1 { font-size: 3rem; margin-bottom: 50px; text-align: left; color: var(--accent); font-weight: 300; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
     
     .data-item { 
-      font-size: 2.2rem; 
-      margin: 25px 0; 
-      padding: 20px 30px; 
-      background: rgba(255,255,255,0.03); 
-      border-radius: 8px; 
-      border-left: 4px solid var(--accent);
-      font-weight: 300;
-      line-height: 1.4;
+      font-size: 2.2rem; margin: 25px 0; padding: 20px 30px; background: rgba(255,255,255,0.03); 
+      border-radius: 8px; border-left: 4px solid var(--accent); font-weight: 300; line-height: 1.4;
     }
     
     strong { font-weight: 600; color: #fff; }
     
-    /* Google Slides Iframe - Alapalkin piilotus */
-    /* Tehdään iframesta hieman ruutua isompi ja nostetaan sitä ylöspäin alapalkin piilottamiseksi */
-    #slides-container {
-      width: 100%;
-      height: calc(100vh - var(--header-height));
-      overflow: hidden;
-      position: relative;
-    }
-    
-    #slides-iframe { 
-      width: 100%; 
-      /* Nostetaan korkeutta 40px verran, jotta Google-palkki jää piiloon "leikkauksen" alle */
-      height: calc(100% + 40px); 
-      border: none; 
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    
+    #slides-container { width: 100%; height: calc(100vh - var(--header-height)); overflow: hidden; position: relative; }
+    #slides-iframe { width: 100%; height: calc(100% + 40px); border: none; position: absolute; top: 0; left: 0; }
     .loading { text-align: center; font-size: 2rem; color: var(--text-muted); font-weight: 300; }
   </style>
 </head>
 <body>
   <div id="header">
     <div class="title">Mäkelänrinteen lukio</div>
+    
+    <!-- UUSI TICKER-ALUE -->
+    <div id="ticker-container">
+      <div class="ticker-text" id="ticker-text"></div>
+    </div>
+
     <div id="clock">Kello käynnistyy...</div>
   </div>
 
@@ -153,7 +141,6 @@
   </div>
 
   <script>
-    // KONFIGURAATIO
     const WORKER_URL = 'https://infotv.jhaapako.workers.dev';
     const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
     const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
@@ -173,12 +160,8 @@
         v.classList.remove('active');
       });
       const active = document.getElementById(viewId);
-      if (viewId === 'view-slides') {
-        active.style.display = 'block'; // Slides vaatii blockin iframea varten
-      } else {
-        active.style.display = 'flex';
-        active.classList.add('active');
-      }
+      if (viewId === 'view-slides') active.style.display = 'block'; 
+      else { active.style.display = 'flex'; active.classList.add('active'); }
     }
 
     async function loadMenu() {
@@ -188,27 +171,42 @@
         const data = await res.json();
         
         let html = '';
-        if (data.lunch) html += `<div class="data-item"><strong>Lounas:</strong> ${data.lunch}</div>`;
-        if (data.dinner && data.dinner !== 'Ei tietoa' && data.dinner !== 'Kasviswok') html += `<div class="data-item"><strong>Kasvislounas / Muu:</strong> ${data.dinner}</div>`;
-        
-        if (!html) html = '<div class="data-item">Ruokalista ei saatavilla tälle päivälle.</div>';
+        html += `<div style="font-size: 2.5rem; font-weight: 500; color: #fff; margin-bottom: 10px;">Tänään</div>`;
+        if (data.today.lunch) html += `<div class="data-item">🥗 Lounas: ${data.today.lunch}</div>`;
+        if (data.today.vegetarian) html += `<div class="data-item">🌱 Kasvislounas: ${data.today.vegetarian}</div>`;
+        if (data.today.dinner) html += `<div class="data-item">🍲 Päivällinen: ${data.today.dinner}</div>`;
+        if (!data.today.lunch && !data.today.dinner) html += `<div class="data-item">Tälle päivälle ei ole tallennettu ruokalistaa.</div>`;
+
+        html += `<div style="font-size: 2.5rem; font-weight: 500; color: #fff; margin-top: 40px; margin-bottom: 10px;">Huomenna</div>`;
+        if (data.tomorrow.lunch) html += `<div class="data-item" style="opacity: 0.8; font-size: 1.8rem;">🥗 Lounas: ${data.tomorrow.lunch}</div>`;
+        if (data.tomorrow.vegetarian) html += `<div class="data-item" style="opacity: 0.8; font-size: 1.8rem;">🌱 Kasvislounas: ${data.tomorrow.vegetarian}</div>`;
+        if (data.tomorrow.dinner) html += `<div class="data-item" style="opacity: 0.8; font-size: 1.8rem;">🍲 Päivällinen: ${data.tomorrow.dinner}</div>`;
+        if (!data.tomorrow.lunch && !data.tomorrow.dinner) html += `<div class="data-item" style="opacity: 0.8; font-size: 1.8rem;">Huomisen ruokalistaa ei ole vielä julkaistu.</div>`;
         
         document.getElementById('menu-data').innerHTML = html;
-      } catch(e) {
-        document.getElementById('menu-data').innerHTML = '<div class="data-item">Ruokalistaa ei saatu ladattua (verkkovirhe).</div>';
-      }
+      } catch(e) { document.getElementById('menu-data').innerHTML = '<div class="data-item">Ruokalistaa ei saatu ladattua.</div>'; }
     }
 
     async function loadCalendar() {
       try {
         const res = await fetch(`${WORKER_URL}/calendar`);
         if (!res.ok) throw new Error('Verkkovirhe');
-        const events = await res.json();
         
+        const data = await res.json();
+        
+        // 1. TARKISTETAAN ONKO TIEDOTTEITA (ALERTS)
+        if (data.alerts && data.alerts.length > 0) {
+          const tickerContainer = document.getElementById('ticker-container');
+          const tickerText = document.getElementById('ticker-text');
+          tickerContainer.style.display = 'flex';
+          // Yhdistetään useampi tiedote, jos niitä on monta samalle päivälle
+          tickerText.textContent = "⚠️ " + data.alerts.join('  |  ⚠️ ') + " ⚠️";
+        }
+
+        // 2. NORMAALI KALENTERILISTA
         let html = '';
-        if (Array.isArray(events) && events.length > 0) {
-          html = events.map(e => {
-            // Tehdään päivämääräriveistä hieman isompia kuin yksittäisistä tapahtumista
+        if (Array.isArray(data.events) && data.events.length > 0) {
+          html = data.events.map(e => {
             if (e.title && !e.title.includes('⏰')) {
               return `<div style="font-size: 2.5rem; font-weight: 500; color: #fff; margin-top: 30px; margin-bottom: 10px;">${e.title}</div>`;
             }
@@ -218,9 +216,7 @@
           html = '<div class="data-item">Ei tulevia tapahtumia tiedossa.</div>';
         }
         document.getElementById('calendar-data').innerHTML = html;
-      } catch(e) {
-        document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei ole saatavilla.</div>';
-      }
+      } catch(e) { document.getElementById('calendar-data').innerHTML = '<div class="data-item">Kalenteri ei ole saatavilla.</div>'; }
     }
 
     async function getSlidesDuration() {
@@ -228,9 +224,7 @@
         const res = await fetch(GAS_SLIDES_URL);
         const info = await res.json();
         return info.totalTime || 240000;
-      } catch(e) {
-        return 240000;
-      }
+      } catch(e) { return 240000; }
     }
 
     async function runLoop() {
@@ -245,7 +239,6 @@
       
       const slidesTime = await getSlidesDuration();
       
-      // rm=minimal piilottaa osan ohjaimista, iframe overflow-hidden CSS leikkaa loput
       document.getElementById('slides-iframe').src = 
         `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=6500&rm=minimal&t=${Date.now()}`;
       
@@ -255,9 +248,7 @@
       window.location.reload();
     }
 
-    window.onload = function() {
-      runLoop();
-    };
+    window.onload = function() { runLoop(); };
   </script>
 </body>
 </html>
