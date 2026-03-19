@@ -2,9 +2,7 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <!-- Aggressiivinen meta-tagi joka kieltää selaimelta oman zoomailun -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <!-- Välimuistin estot -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -12,7 +10,6 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    /* Muutettu käyttämään turvallista Flexbox-rakennetta 100vh sijaan */
     html, body { 
       width: 100%; 
       height: 100%; 
@@ -60,7 +57,6 @@
     
     #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
     
-    /* Vie kaiken lopputilan näytöltä headerin jälkeen */
     #slides-container { 
       width: 100%; 
       flex-grow: 1; 
@@ -70,7 +66,7 @@
     
     .view-slide {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      opacity: 0; visibility: hidden; transition: opacity 0.6s ease;
+      opacity: 0; visibility: hidden; transition: opacity 0.8s ease; 
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
       overflow: hidden;
@@ -114,8 +110,8 @@
     .cal-title { font-size: 1.62rem; font-weight: 300; color: #cbd5e1; line-height: 1.4; } 
 
     /* IFRAME */
-    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: #000; overflow: hidden; }
-    iframe { width: 100%; height: 100%; border: none; display: block; }
+    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: transparent; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: none; display: block; background: transparent; }
     
     /* PALLOT */
     #pagination {
@@ -149,16 +145,15 @@
     var currentStep = 0;
     var timer = null;
     var slideCountId = 1;
-    var iframeCreated = false;
-    var gasData = null;
 
+    var nextGPlayer = 0; 
+    
     function updateClock() {
       var now = new Date();
       var days = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
       var h = now.getHours(); var m = now.getMinutes();
       document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
-
       if (h === 2 && m === 0 && now.getSeconds() < 2) window.location.reload(true);
     }
     setInterval(updateClock, 1000); updateClock();
@@ -257,14 +252,40 @@
         var fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' '); var dtstart = dtstartMatch[1]; var loc = locMatch ? locMatch[1].trim().substring(0, 25) : '';
         var eDate = null; var timeStr = ''; var isToday = false; var isTom = false;
 
+        // Kokopäivän tapahtuma
         if (dtstart.length === 8) {  
-          var y1 = parseInt(dtstart.substr(0,4), 10); var m1 = parseInt(dtstart.substr(4,2), 10) - 1; var d1 = parseInt(dtstart.substr(6,8), 10);
-          eDate = new Date(y1, m1, d1, 12, 0, 0); isToday = (y1 === cy && m1 === cm && d1 === cd); isTom = (y1 === ty && m1 === tm && d1 === td);
-        } else if (dtstart.indexOf('T') !== -1) {  
-          var p = dtstart.split('T'); var y2 = parseInt(p[0].substr(0,4), 10); var m2 = parseInt(p[0].substr(4,2), 10) - 1; var d2 = parseInt(p[0].substr(6,2), 10);
-          eDate = new Date(y2, m2, d2); if (p[1].length >= 4) timeStr = p[1].substr(0,2) + ':' + p[1].substr(2,2);
-          isToday = (y2 === cy && m2 === cm && d2 === cd); isTom = (y2 === ty && m2 === tm && d2 === td);
+          var y1 = parseInt(dtstart.substr(0,4), 10); var m1 = parseInt(dtstart.substr(4,2), 10) - 1; var d1 = parseInt(dtstart.substr(6,2), 10);
+          eDate = new Date(y1, m1, d1, 12, 0, 0); 
+          isToday = (y1 === cy && m1 === cm && d1 === cd); isTom = (y1 === ty && m1 === tm && d1 === td);
+        } 
+        // Tiettyyn aikaan sidottu tapahtuma
+        else if (dtstart.indexOf('T') !== -1) {  
+          var p = dtstart.split('T'); 
+          var y2 = parseInt(p[0].substr(0,4), 10); var m2 = parseInt(p[0].substr(4,2), 10) - 1; var d2 = parseInt(p[0].substr(6,2), 10);
+          var h2 = 0; var min2 = 0; var sec2 = 0;
+          if (p[1].length >= 4) { h2 = parseInt(p[1].substr(0,2), 10); min2 = parseInt(p[1].substr(2,2), 10); }
+          if (p[1].length >= 6) { sec2 = parseInt(p[1].substr(4,2), 10); }
+
+          // AIKAVYÖHYKEKORJAUS (Jos sisältää Z-kirjaimen, se on UTC-aikaa. Date.UTC huolehtii muunnoksesta Suomen aikaan laitteen asetusten perusteella)
+          if (dtstart.indexOf('Z') !== -1) {
+              eDate = new Date(Date.UTC(y2, m2, d2, h2, min2, sec2));
+          } else {
+              eDate = new Date(y2, m2, d2, h2, min2, sec2);
+          }
+
+          // Otetaan oikean aikavyöhykkeen tunnit ja minuutit
+          var localH = eDate.getHours();
+          var localM = eDate.getMinutes();
+          timeStr = (localH < 10 ? '0' + localH : localH) + ':' + (localM < 10 ? '0' + localM : localM);
+          
+          // Päivitetään Today/Tomorrow vertailu paikallisen ajan mukaan (jos UTC muutos vaihtoi vuorokautta)
+          var localYear = eDate.getFullYear();
+          var localMonth = eDate.getMonth();
+          var localDay = eDate.getDate();
+          isToday = (localYear === cy && localMonth === cm && localDay === cd); 
+          isTom = (localYear === ty && localMonth === tm && localDay === td);
         }
+
         if (!eDate || isNaN(eDate.getTime()) || (eDate < todayStart && !isToday)) continue;
         if (fullTitle.toUpperCase().indexOf('TIEDOTE:') === 0) { if (isToday) alerts.push(fullTitle.substring(8).trim()); continue; }
         events.push({ date: eDate, title: fullTitle.substring(0,50), time: timeStr, location: loc, isToday: isToday, isTomorrow: isTom });
@@ -328,21 +349,39 @@
       if (timeline.length > 0) pagination.style.display = 'flex';
     }
 
+    function initSlidesContainer() {
+      var container = document.getElementById('slides-container');
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-0"></div>');
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides-1"></div>');
+    }
+
+    function preloadTimelineItem(idx) {
+      if (idx >= timeline.length) return;
+      var step = timeline[idx];
+      
+      if (step.type === 'gslides') {
+        if (step.playerId === undefined) {
+          step.playerId = nextGPlayer;
+          nextGPlayer = 1 - nextGPlayer; 
+        }
+        var container = document.getElementById('slide-gslides-' + step.playerId);
+        var url = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
+        
+        if (!container.innerHTML || container.innerHTML.indexOf(step.slideId) === -1) {
+          container.innerHTML = '<iframe src="' + url + '" allowfullscreen></iframe>';
+        }
+      }
+    }
+
     function startShow() {
       if (timeline.length === 0) return; 
       updatePagination();
+      preloadTimelineItem(0);
       playTimeline(0);
     }
 
     function checkFastStart() {
-      if (menuReady && calReady) {
-        startShow();
-      }
-    }
-
-    function initSlidesContainer() {
-      var container = document.getElementById('slides-container');
-      container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides"></div>');
+      if (menuReady && calReady) startShow();
     }
 
     function playTimeline(index) {
@@ -352,22 +391,20 @@
       }
       
       currentStep = index;
-      var step = timeline[currentStep];
+      preloadTimelineItem(currentStep);
 
-      if (step.type === 'gslides') {
-        var gContainer = document.getElementById('slide-gslides');
-        var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?rm=minimal&slide=id.' + step.slideId;
-        gContainer.innerHTML = '<iframe src="' + iframeUrl + '" allowfullscreen></iframe>';
-      }
+      var step = timeline[currentStep];
+      var activeElId = (step.type === 'gslides') ? 'slide-gslides-' + step.playerId : step.id;
 
       var activeSlide = document.querySelector('.view-slide.active');
-      if (activeSlide && activeSlide.id !== step.id) {
+      if (activeSlide && activeSlide.id !== activeElId) {
         activeSlide.classList.remove('active');
       }
-      var nextSlideEl = document.getElementById(step.id);
+      var nextSlideEl = document.getElementById(activeElId);
       if (nextSlideEl) nextSlideEl.classList.add('active');
 
       updatePagination();
+      preloadTimelineItem(currentStep + 1);
 
       if (timer) clearTimeout(timer);
       timer = setTimeout(function() {
@@ -403,6 +440,7 @@
         }
       }
       updatePagination();
+      if (currentStep < timeline.length) preloadTimelineItem(currentStep + 1);
     });
 
     setTimeout(function() {
