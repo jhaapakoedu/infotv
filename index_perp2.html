@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mäkelänrinteen lukio - Info-TV</title>
+  <style>
+    :root {
+      --bg-color: #0b1120;
+      --panel-bg: rgba(255, 255, 255, 0.05);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --alert-color: #ef4444;
+      --header-height: 80px;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body, html { 
+      height: 100vh; width: 100vw;
+      background-color: var(--bg-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden; color: var(--text-main); 
+    }
+    
+    /* Yläpalkki */
+    #header { 
+      position: absolute; top: 0; width: 100%; height: var(--header-height); 
+      background: #020617; display: flex; align-items: center; justify-content: space-between; 
+      padding: 0 50px; z-index: 1000; border-bottom: 1px solid #1e293b;
+    }
+    .title { font-size: 2rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+
+    /* TICKER */
+    #ticker-container {
+      flex-grow: 1; overflow: hidden; margin: 0 40px; display: none;
+      background: rgba(239, 68, 68, 0.15); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);
+      height: 50px; align-items: center;
+    }
+    .ticker-text {
+      white-space: nowrap; font-size: 1.8rem; font-weight: 600; color: var(--alert-color);
+      animation: ticker 15s linear infinite; padding-left: 100%;
+    }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-200%); } }
+    
+    #clock { font-size: 1.8rem; font-weight: 400; color: var(--text-muted); white-space: nowrap; }
+    
+    /* Näkymät */
+    #slides-container { width: 100%; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); position: relative; }
+    
+    .view-slide {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .view-slide.active { opacity: 1; visibility: visible; z-index: 10; }
+    
+    .content { 
+      background: var(--panel-bg); border: 1px solid #1e293b;
+      margin: 0 auto; padding: 60px; border-radius: 16px; width: 85%; max-width: 1600px; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
+    }
+    
+    h1 { font-size: 3rem; margin-bottom: 50px; color: var(--accent); font-weight: 300; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+    h2 { font-size: 2.5rem; font-weight: 500; margin: 30px 0 10px 0; }
+    
+    .data-item { 
+      font-size: 2.2rem; margin: 20px 0; padding: 20px 30px; background: rgba(255,255,255,0.03); 
+      border-radius: 8px; border-left: 4px solid var(--accent); font-weight: 300; line-height: 1.4;
+    }
+    
+    .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; }
+    iframe { width: 100%; height: 100%; border: none; }
+    
+    /* Paginointi (pallot) */
+    #pagination {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 15px; z-index: 1000;
+      background: rgba(2, 6, 23, 0.7); padding: 15px 30px; border-radius: 30px; backdrop-filter: blur(5px);
+    }
+    .dot { width: 15px; height: 15px; border-radius: 50%; background: #475569; transition: all 0.3s; }
+    .dot.active { background: var(--accent); transform: scale(1.3); }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="title">Mäkelänrinteen lukio</div>
+    <div id="ticker-container"><div class="ticker-text" id="ticker-text"></div></div>
+    <div id="clock">Ladataan...</div>
+  </div>
+
+  <div id="slides-container">
+    <div class="view-slide active" id="loading-slide">
+      <div class="content"><div style="font-size: 2rem; color: var(--text-muted); text-align: center;">Ladataan Info-TV:tä...</div></div>
+    </div>
+    <!-- Tänne generoidaan diat -->
+  </div>
+
+  <div id="pagination" style="display: none;"></div>
+
+  <script>
+    // --- ASETUKSET ---
+    const WORKER_URL = 'https://infotv.jhaapako.workers.dev';
+    const GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
+    const SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
+    
+    const INFO_DURATION = 8000; // Ruokalista & Kalenteri
+    const SLIDE_DURATION = 12000; // Google Slides per dia
+
+    let timeline = [];
+    let currentStep = 0;
+    let timer;
+
+    // --- KELLO ---
+    const updateClock = () => {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.toLocaleDateString('fi-FI', {weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric'}) + 
+        ' klo ' + now.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
+    };
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- APUFUNKTIOT PARSINTAAN ---
+    const formatMeal = (rawString) => {
+      if (!rawString || rawString.trim() === '') return null;
+      let cleanStr = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ');
+      const parts = cleanStr.split(',');
+      if (parts.length === 0 || parts[0].trim() === "") return null;
+      const mainMeal = parts[0].trim();
+      const sides = parts.slice(1).map(s => s.trim()).filter(s => s).join(', ');
+      return sides ? `<span style="font-weight:500;">${mainMeal}</span><br><span style="font-size:0.7em; color:var(--text-muted);">${sides}</span>` 
+                   : `<span style="font-weight:500;">${mainMeal}</span>`;
+    };
+
+    const parseIcal = (icalText) => {
+      const events = [];
+      const alerts = [];
+      const now = new Date();
+      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const blocks = icalText.split('BEGIN:VEVENT').slice(1);
+      blocks.forEach(block => {
+        const summaryMatch = block.match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i);
+        const dtstartMatch = block.match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i);
+        if (!summaryMatch || !dtstartMatch) return;
+        
+        const fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' ');
+        const dtstart = dtstartMatch[1];
+        let eventDate, timeStr = '';
+
+        if (dtstart.length === 8) {  
+          eventDate = new Date(parseInt(dtstart.substr(0,4)), parseInt(dtstart.substr(4,2)) - 1, parseInt(dtstart.substr(6,8)));
+        } else if (dtstart.includes('T')) {  
+          const parts = dtstart.split('T');
+          eventDate = new Date(parseInt(parts[0].substr(0,4)), parseInt(parts[0].substr(4,2)) - 1, parseInt(parts[0].substr(6,2)));
+          if (parts[1].length >= 4) timeStr = `${parts[1].substr(0,2)}:${parts[1].substr(2,2)}`;
+        }
+
+        const isToday = eventDate && eventDate.toDateString() === now.toDateString();
+        if (!eventDate || isNaN(eventDate.getTime()) || (eventDate < new Date(now.setHours(0,0,0,0)) && !isToday) || eventDate > nextWeek) return;
+
+        if (fullTitle.toUpperCase().startsWith('TIEDOTE:')) {
+          if (isToday) alerts.push(fullTitle.substring(8).trim()); 
+          return; 
+        }
+
+        events.push({ date: eventDate, title: fullTitle.substring(0,40), time: timeStr });
+      });
+
+      events.sort((a, b) => a.date - b.date);
+      return { events, alerts };
+    };
+
+    // --- NÄKYMIEN RAKENNUS ---
+    const buildMenuSlides = (jsonData) => {
+      const container = document.getElementById('slides-container');
+      const now = new Date();
+      const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const todayStr = `${now.getDate()}.${now.getMonth() + 1}.`;
+      const tomorrowStr = `${tomorrow.getDate()}.${tomorrow.getMonth() + 1}.`;
+      
+      let todayMeals = { lunch: null, veg: null, dinner: null };
+      let tomorrowMeals = { lunch: null, veg: null, dinner: null };
+      
+      const daysArray = jsonData?.result?.pageContext?.menu?.Days || [];
+      const parseDay = (datePattern, targetObj) => {
+        const dayData = daysArray.find(d => d.Date && d.Date.includes(datePattern));
+        if (!dayData || !dayData.Meals) return;
+        dayData.Meals.forEach(meal => {
+          const type = (meal.MealType || "").toLowerCase();
+          const name = meal.Name || "";
+          if (type.includes('kasvis')) targetObj.veg = formatMeal(name);
+          else if (type.includes('päivällinen') || type.includes('iltaruoka')) targetObj.dinner = formatMeal(name);
+          else if (type.includes('lounas') || !targetObj.lunch) targetObj.lunch = formatMeal(name);
+        });
+      };
+      
+      parseDay(todayStr, todayMeals);
+      parseDay(tomorrowStr, tomorrowMeals);
+
+      let html = `<div class="view-slide" id="slide-menu"><div class="content"><h1>Päivän lounas</h1>`;
+      
+      html += `<h2>Tänään</h2>`;
+      if (todayMeals.lunch) html += `<div class="data-item">🥗 ${todayMeals.lunch}</div>`;
+      if (todayMeals.veg) html += `<div class="data-item">🌱 ${todayMeals.veg}</div>`;
+      if (todayMeals.dinner) html += `<div class="data-item">🍲 ${todayMeals.dinner}</div>`;
+      if (!todayMeals.lunch && !todayMeals.dinner) html += `<div class="data-item">Tälle päivälle ei ole tallennettu ruokalistaa.</div>`;
+
+      html += `<h2>Huomenna</h2>`;
+      if (tomorrowMeals.lunch) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🥗 ${tomorrowMeals.lunch}</div>`;
+      if (tomorrowMeals.veg) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🌱 ${tomorrowMeals.veg}</div>`;
+      if (tomorrowMeals.dinner) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">🍲 ${tomorrowMeals.dinner}</div>`;
+      if (!tomorrowMeals.lunch && !tomorrowMeals.dinner) html += `<div class="data-item" style="opacity:0.8; font-size:1.8rem;">Huomisen ruokalistaa ei ole julkaistu.</div>`;
+      
+      html += `</div></div>`;
+      container.insertAdjacentHTML('beforeend', html);
+      timeline.push({ id: 'slide-menu', duration: INFO_DURATION });
+    };
+
+    const buildCalendarSlides = (icalText) => {
+      const container = document.getElementById('slides-container');
+      const { events, alerts } = parseIcal(icalText);
+
+      if (alerts.length > 0) {
+        document.getElementById('ticker-container').style.display = 'flex';
+        document.getElementById('ticker-text').textContent = "⚠️ " + alerts.join('  |  ⚠️ ') + " ⚠️";
+      }
+
+      if (events.length === 0) {
+        container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-1"><div class="content"><h1>Tulevat tapahtumat</h1><div class="data-item">Ei tapahtumia seuraavan 7 päivän aikana.</div></div></div>`);
+        timeline.push({ id: 'slide-cal-1', duration: INFO_DURATION });
+        return;
+      }
+
+      // Ryhmittele päivittäin
+      const grouped = {};
+      events.forEach(ev => {
+        const dayKey = ev.date.toLocaleDateString('fi-FI', { weekday: 'long', day: 'numeric', month: 'short' });
+        const capitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+        if (!grouped[capitalized]) grouped[capitalized] = [];
+        grouped[capitalized].push(`  ⏰ ${ev.time} • ${ev.title}`);
+      });
+
+      // Rakenna diat (max 6 riviä per dia)
+      let currentLines = [];
+      let slideCount = 1;
+      
+      const flushSlide = () => {
+        if (currentLines.length === 0) return;
+        const id = `slide-cal-${slideCount}`;
+        const html = currentLines.map(line => line.startsWith('  ⏰') ? `<div class="data-item" style="margin-left:30px; font-size:2rem;">${line}</div>` : `<h2>${line}</h2>`).join('');
+        container.insertAdjacentHTML('beforeend', `<div class="view-slide" id="${id}"><div class="content"><h1>Tulevat tapahtumat</h1>${html}</div></div>`);
+        timeline.push({ id, duration: INFO_DURATION });
+        slideCount++;
+        currentLines = [];
+      };
+
+      for (const [day, items] of Object.entries(grouped)) {
+        if (currentLines.length >= 5) flushSlide();
+        currentLines.push(day);
+        items.forEach(item => {
+          if (currentLines.length >= 6) flushSlide();
+          currentLines.push(item);
+        });
+      }
+      flushSlide();
+    };
+
+    // --- PÄÄLOGIIKKA ---
+    const initApp = async () => {
+      try {
+        const [menuRes, calRes, gasRes] = await Promise.allSettled([
+          fetch(`${WORKER_URL}/menu`).then(r => r.json()),
+          fetch(`${WORKER_URL}/calendar`).then(r => r.text()),
+          fetch(GAS_SLIDES_URL).then(r => r.json())
+        ]);
+
+        // 1. Ruokalista
+        if (menuRes.status === 'fulfilled' && !menuRes.value.error) {
+          buildMenuSlides(menuRes.value);
+        } else {
+          document.getElementById('slides-container').insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-menu"><div class="content"><h1>Päivän lounas</h1><div class="data-item">Ruokalistaa ei saatu ladattua.</div></div></div>`);
+          timeline.push({ id: 'slide-menu', duration: INFO_DURATION });
+        }
+
+        // 2. Kalenteri
+        if (calRes.status === 'fulfilled' && calRes.value && !calRes.value.startsWith('Kalenteri ei')) {
+          buildCalendarSlides(calRes.value);
+        } else {
+          document.getElementById('slides-container').insertAdjacentHTML('beforeend', `<div class="view-slide" id="slide-cal-error"><div class="content"><h1>Tulevat tapahtumat</h1><div class="data-item">Kalenteri ei saatavilla.</div></div></div>`);
+          timeline.push({ id: 'slide-cal-error', duration: INFO_DURATION });
+        }
+
+        // 3. Google Slides
+        let slidesCount = 1;
+        if (gasRes.status === 'fulfilled' && gasRes.value.slideCount) {
+          slidesCount = gasRes.value.slideCount;
+        }
+
+        const iframeUrl = `https://docs.google.com/presentation/d/${SLIDES_ID}/embed?start=true&loop=false&delayms=${SLIDE_DURATION}&rm=minimal`;
+        document.getElementById('slides-container').insertAdjacentHTML('beforeend', `
+          <div class="view-slide iframe-wrapper" id="slide-gslides">
+            <iframe src="${iframeUrl}" allowfullscreen></iframe>
+          </div>
+        `);
+
+        for(let i = 0; i < slidesCount; i++) {
+          timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION });
+        }
+
+        // Pallot
+        document.getElementById('pagination').innerHTML = timeline.map(() => `<div class="dot"></div>`).join('');
+        document.getElementById('pagination').style.display = 'flex';
+        
+        playTimeline(0);
+
+      } catch (e) {
+        console.error("Latausvirhe", e);
+        setTimeout(() => window.location.reload(), 30000);
+      }
+    };
+
+    const playTimeline = (index) => {
+      if (index >= timeline.length) {
+        window.location.reload();
+        return;
+      }
+      currentStep = index;
+      const step = timeline[currentStep];
+
+      const activeSlide = document.querySelector('.view-slide.active');
+      if (activeSlide && activeSlide.id !== step.id) activeSlide.classList.remove('active');
+      document.getElementById(step.id).classList.add('active');
+
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
+
+      clearTimeout(timer);
+      timer = setTimeout(() => playTimeline(currentStep + 1), step.duration);
+    };
+
+    initApp();
+  </script>
+</body>
+</html>
