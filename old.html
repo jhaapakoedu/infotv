@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Märsky Info-TV</title>
   <style>
-    /* CSS MUUTETTU "VANHAKSI" (CSS Variables ja Grid poistettu yhteensopivuuden takaamiseksi) */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body, html { 
@@ -23,7 +22,7 @@
     }
     
     .title { 
-      font-size: 1.8rem; font-weight: 500; letter-spacing: 3px; 
+      font-size: 1.5rem; font-weight: 500; letter-spacing: 3px; 
       color: #f8fafc; white-space: nowrap; 
     }
 
@@ -39,10 +38,7 @@
       position: absolute;
       animation: ticker 30s linear infinite; 
     }
-    @keyframes ticker { 
-      0% { left: 100%; } 
-      100% { left: -300%; } 
-    }
+    @keyframes ticker { 0% { left: 100%; } 100% { left: -300%; } }
     
     #clock { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
     
@@ -72,43 +68,37 @@
       padding-bottom: 25px; margin-bottom: 50px; 
     }
 
-    /* RUOKALISTA (Grid korvattu Flexboxilla) */
+    /* RUOKALISTA */
     .menu-grid { display: flex; justify-content: space-between; }
     .day-col { flex: 1; margin: 0 40px; }
     .day-col:first-child { margin-left: 0; }
     .day-col:last-child { margin-right: 0; }
-    
-    .day-col h2 { 
-      font-size: 1.4rem; color: #38bdf8; text-transform: uppercase; 
-      letter-spacing: 2px; font-weight: 600; margin-bottom: 35px; opacity: 0.9;
-    }
+    .day-col h2 { font-size: 1.25rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 35px; opacity: 0.9; }
     .course-item { margin-bottom: 30px; }
-    .course-type { font-size: 1rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 6px; }
-    .course-main { font-size: 2.2rem; font-weight: 400; color: #f8fafc; line-height: 1.3; }
-    .course-sides { font-size: 1.3rem; color: #94a3b8; margin-top: 8px; font-weight: 300; }
-    .empty-menu { font-size: 1.8rem; color: #94a3b8; font-weight: 300; font-style: italic; }
+    .course-type { font-size: 0.9rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .course-main { font-size: 1.98rem; font-weight: 400; color: #f8fafc; line-height: 1.3; } 
+    .course-sides { font-size: 1.17rem; color: #94a3b8; margin-top: 8px; font-weight: 300; } 
+    .empty-menu { font-size: 1.62rem; color: #94a3b8; font-weight: 300; font-style: italic; } 
     
     /* KALENTERI */
     .cal-day-group { margin-bottom: 40px; }
-    .cal-date-header { 
-      font-size: 1.3rem; color: #38bdf8; text-transform: uppercase; 
-      letter-spacing: 2px; margin-bottom: 20px; font-weight: 600;
-    }
+    .cal-date-header { font-size: 1.17rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; }
     .cal-event-row { display: flex; align-items: baseline; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .cal-event-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .cal-time { font-size: 1.8rem; font-weight: 500; color: #f8fafc; width: 140px; flex-shrink: 0; }
-    .cal-title { font-size: 1.8rem; font-weight: 300; color: #cbd5e1; line-height: 1.4; }
+    .cal-time { font-size: 1.62rem; font-weight: 500; color: #f8fafc; width: 140px; flex-shrink: 0; } 
+    .cal-title { font-size: 1.62rem; font-weight: 300; color: #cbd5e1; line-height: 1.4; } 
 
     .iframe-wrapper { width: 100%; height: 100%; padding: 0; margin: 0; background: #000; }
     iframe { width: 100%; height: 100%; border: none; }
     
+    /* PALLOT UUDELLA TYYLILLÄ */
     #pagination {
-      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
       display: flex; justify-content: center; z-index: 1000;
-      background: rgba(2, 6, 23, 0.6); padding: 12px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0, 0, 0, 0.2); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.01);
     }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; transition: all 0.4s ease; margin: 0 6px; }
-    .dot.active { background: #38bdf8; transform: scale(1.5); }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); transition: all 0.4s ease; margin: 0 5px; }
+    .dot.active { background: rgba(56, 189, 248, 0.5); transform: scale(1.4); }
   </style>
 </head>
 <body>
@@ -118,18 +108,10 @@
     <div id="clock">Kello...</div>
   </div>
 
-  <div id="slides-container">
-    <div class="view-slide active" id="loading-slide">
-      <div class="content" style="padding: 40px; text-align: center; border: none; background: transparent; box-shadow: none;">
-        <div style="font-size: 1.5rem; color: #94a3b8; font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">Käynnistetään Info-TV...</div>
-      </div>
-    </div>
-  </div>
-
+  <div id="slides-container"></div>
   <div id="pagination" style="display: none;"></div>
 
   <script>
-    // TÄMÄ SCRIPT ON NYT 100% "ES5" - ELI TOIMII VAIKKA VUODEN 2014 ANDROID-TELEVISIOSSA
     var WORKER_URL = 'https://infotv.jhaapako.workers.dev';
     var GAS_SLIDES_URL = 'https://script.google.com/macros/s/AKfycbyuIPNC_UoUmJpO4z7cJqoc9eReWaxbMribhjHoynqAHIMopCinCHzgtowOUslEXGGG2Q/exec';
     var SLIDES_ID = '1Yw-JktMPoenOfCkDxZO99YCLLNEcpcmUN3KO2ez6BjU';
@@ -140,24 +122,19 @@
     var timeline = [];
     var currentStep = 0;
     var timer = null;
-    var slideCountId = 1; // Apumuuttuja ID-generointiin
+    var slideCountId = 1;
+    var iframeCreated = false;
+    var gasData = null; // Tallennetaan GASin hidas vastaus tänne
 
-    // Kello
     function updateClock() {
       var now = new Date();
       var days = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
-      
-      var h = now.getHours();
-      var m = now.getMinutes();
-      var timeStr = (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
-      
-      document.getElementById('clock').textContent = dateStr + '   ' + timeStr;
+      var h = now.getHours(); var m = now.getMinutes();
+      document.getElementById('clock').textContent = dateStr + '   ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    setInterval(updateClock, 1000); updateClock();
 
-    // Apufunktio tiedon hakuun (Vanhan koulun XHR = turvallisin vaihtoehto)
     function ajaxGet(url, responseType, callback) {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
@@ -165,129 +142,62 @@
         if (xhr.readyState === 4) {
           if (xhr.status >= 200 && xhr.status < 300) {
             if (responseType === 'json') {
-              try {
-                callback(null, JSON.parse(xhr.responseText));
-              } catch(e) {
-                callback(e, null);
-              }
-            } else {
-              callback(null, xhr.responseText);
-            }
-          } else {
-            callback(new Error('HTTP Error: ' + xhr.status), null);
-          }
+              try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(e, null); }
+            } else { callback(null, xhr.responseText); }
+          } else { callback(new Error('HTTP Error'), null); }
         }
       };
       xhr.send();
     }
 
-    // Apufunktio sliden luontiin
     function createSlideHtml(title, htmlContent) {
       var id = 'slide-gen-' + slideCountId;
       var container = document.getElementById('slides-container');
-      
-      var slideHtml = '<div class="view-slide" id="' + id + '">' +
-                        '<div class="content">' +
-                          '<h1>' + title + '</h1>' +
-                          (htmlContent || '<div class="empty-menu">Ei sisältöä.</div>') +
-                        '</div>' +
-                      '</div>';
-      
-      container.insertAdjacentHTML('beforeend', slideHtml);
-      timeline.push({ id: id, duration: INFO_DURATION });
+      container.insertAdjacentHTML('beforeend', '<div class="view-slide" id="' + id + '"><div class="content"><h1>' + title + '</h1>' + (htmlContent || '<div class="empty-menu">Ei sisältöä.</div>') + '</div></div>');
+      timeline.push({ id: id, duration: INFO_DURATION, type: 'info' });
       slideCountId++;
     }
 
-    // Ruokalistan parsinta
+    // --- RUOKALISTA (LYHENNETTY) ---
     function formatMeal(rawString, typeName) {
       if (!rawString || rawString.trim() === '') return null;
-      var cleanStr = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ');
-      var parts = cleanStr.split(',');
+      var parts = rawString.replace(/\([A-ZÄÖa-zäö,\s]*\)/g, '').trim().replace(/\s+/g, ' ').split(',');
       if (parts.length === 0 || parts[0].trim() === "") return null;
-      
-      var mainMeal = parts[0].trim();
-      var sidesArr = [];
-      for(var i = 1; i < parts.length; i++) {
-        if (parts[i].trim() !== '') sidesArr.push(parts[i].trim());
-      }
-      var sides = sidesArr.join(', ');
-      
-      var html = '<div class="course-item">' +
-                   '<div class="course-type">' + typeName + '</div>' +
-                   '<div class="course-main">' + mainMeal + '</div>';
-      if (sides) {
-        html += '<div class="course-sides">' + sides + '</div>';
-      }
-      html += '</div>';
-      return html;
+      var sidesArr = []; for(var i = 1; i < parts.length; i++) { if (parts[i].trim() !== '') sidesArr.push(parts[i].trim()); }
+      return '<div class="course-item"><div class="course-type">' + typeName + '</div><div class="course-main">' + parts[0].trim() + '</div>' + (sidesArr.length > 0 ? '<div class="course-sides">' + sidesArr.join(', ') + '</div>' : '') + '</div>';
     }
 
     function buildMenuSlides(jsonData) {
-      var now = new Date();
-      var tomorrow = new Date(); 
-      tomorrow.setDate(now.getDate() + 1);
-      
+      var now = new Date(); var tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
       var todayStr = now.getDate() + '.' + (now.getMonth() + 1) + '.';
       var tomorrowStr = tomorrow.getDate() + '.' + (tomorrow.getMonth() + 1) + '.';
-      
-      var todayMeals = { lunch: null, veg: null, dinner: null };
-      var tomorrowMeals = { lunch: null, veg: null, dinner: null };
-      
-      var daysArray = [];
-      if (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu && jsonData.result.pageContext.menu.Days) {
-        daysArray = jsonData.result.pageContext.menu.Days;
-      }
+      var tObj = { lunch: null, veg: null, dinner: null }; var tmObj = { lunch: null, veg: null, dinner: null };
+      var daysArray = (jsonData && jsonData.result && jsonData.result.pageContext && jsonData.result.pageContext.menu) ? jsonData.result.pageContext.menu.Days : [];
 
       function parseDay(datePattern, targetObj) {
         var dayData = null;
-        for (var i = 0; i < daysArray.length; i++) {
-          if (daysArray[i].Date && daysArray[i].Date.indexOf(datePattern) !== -1) {
-            dayData = daysArray[i];
-            break;
-          }
-        }
+        for (var i = 0; i < daysArray.length; i++) { if (daysArray[i].Date && daysArray[i].Date.indexOf(datePattern) !== -1) { dayData = daysArray[i]; break; } }
         if (!dayData || !dayData.Meals) return;
-        
         for (var j = 0; j < dayData.Meals.length; j++) {
-          var meal = dayData.Meals[j];
-          var type = (meal.MealType || "").toLowerCase();
-          var name = meal.Name || "";
-          
+          var type = (dayData.Meals[j].MealType || "").toLowerCase(); var name = dayData.Meals[j].Name || "";
           if (type.indexOf('kasvis') !== -1) targetObj.veg = formatMeal(name, 'Kasvislounas');
           else if (type.indexOf('päivällinen') !== -1 || type.indexOf('iltaruoka') !== -1) targetObj.dinner = formatMeal(name, 'Päivällinen');
           else if (type.indexOf('lounas') !== -1 || !targetObj.lunch) targetObj.lunch = formatMeal(name, 'Lounas');
         }
       }
-      
-      parseDay(todayStr, todayMeals);
-      parseDay(tomorrowStr, tomorrowMeals);
+      parseDay(todayStr, tObj); parseDay(tomorrowStr, tmObj);
 
-      var html = '<div class="menu-grid">';
-      
-      // Tänään
-      html += '<div class="day-col"><h2>Tänään</h2>';
-      var todayHasFood = todayMeals.lunch || todayMeals.veg || todayMeals.dinner;
-      if (todayMeals.lunch) html += todayMeals.lunch;
-      if (todayMeals.veg) html += todayMeals.veg;
-      if (todayMeals.dinner) html += todayMeals.dinner;
-      if (!todayHasFood) html += '<div class="empty-menu">Ei tallennettua ruokalistaa tälle päivälle.</div>';
-      html += '</div>';
-
-      // Huomenna
-      html += '<div class="day-col"><h2>Huomenna</h2>';
-      var tomorrowHasFood = tomorrowMeals.lunch || tomorrowMeals.veg || tomorrowMeals.dinner;
-      if (tomorrowMeals.lunch) html += tomorrowMeals.lunch;
-      if (tomorrowMeals.veg) html += tomorrowMeals.veg;
-      if (tomorrowMeals.dinner) html += tomorrowMeals.dinner;
-      if (!tomorrowHasFood) html += '<div class="empty-menu">Huomisen ruokalistaa ei ole julkaistu.</div>';
-      html += '</div>';
-
-      html += '</div>';
-      
+      var html = '<div class="menu-grid"><div class="day-col"><h2>Tänään</h2>';
+      var tFood = tObj.lunch || tObj.veg || tObj.dinner;
+      if (tFood) html += (tObj.lunch||'') + (tObj.veg||'') + (tObj.dinner||''); else html += '<div class="empty-menu">Ei tallennettua ruokalistaa tälle päivälle.</div>';
+      html += '</div><div class="day-col"><h2>Huomenna</h2>';
+      var tmFood = tmObj.lunch || tmObj.veg || tmObj.dinner;
+      if (tmFood) html += (tmObj.lunch||'') + (tmObj.veg||'') + (tmObj.dinner||''); else html += '<div class="empty-menu">Huomisen ruokalistaa ei ole julkaistu.</div>';
+      html += '</div></div>';
       createSlideHtml('Päivän Ruokalista', html);
     }
 
-    // Kalenterin parsinta
+    // --- KALENTERI (LYHENNETTY) ---
     function formatDayKey(dateObj) {
       var daysArr = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
       var monthsArr = ['tammi', 'helmi', 'maalis', 'huhti', 'touko', 'kesä', 'heinä', 'elo', 'syys', 'loka', 'marras', 'joulu'];
@@ -295,222 +205,99 @@
     }
 
     function buildCalendarSlides(icalText) {
-      var events = [];
-      var alerts = [];
-      
-      var now = new Date();
-      var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      var currentYear = now.getFullYear();
-      var currentMonth = now.getMonth();
-      var currentDay = now.getDate();
-
-      var tomorrowDate = new Date();
-      tomorrowDate.setDate(now.getDate() + 1);
-      var tomorrowYear = tomorrowDate.getFullYear();
-      var tomorrowMonth = tomorrowDate.getMonth();
-      var tomorrowDay = tomorrowDate.getDate();
+      var events = []; var alerts = [];
+      var now = new Date(); var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var cy = now.getFullYear(); var cm = now.getMonth(); var cd = now.getDate();
+      var tDate = new Date(); tDate.setDate(now.getDate() + 1); var ty = tDate.getFullYear(); var tm = tDate.getMonth(); var td = tDate.getDate();
 
       var blocks = icalText.split('BEGIN:VEVENT');
       for (var i = 1; i < blocks.length; i++) {
-        var block = blocks[i];
-        var summaryMatch = block.match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i);
-        var dtstartMatch = block.match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i);
+        var summaryMatch = blocks[i].match(/SUMMARY(?:;[^:]*)?:([^\r\n]*)/i); var dtstartMatch = blocks[i].match(/DTSTART(?:;[^:]*)?:([^\r\n]*)/i); var locMatch = blocks[i].match(/LOCATION(?:;[^:]*)?:([^\r\n]*)/i);
         if (!summaryMatch || !dtstartMatch) continue;
-        
-        var fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' ');
-        var dtstart = dtstartMatch[1];
-        var eventDate = null;
-        var timeStr = '';
-        var isToday = false;
-        var isTomorrow = false;
+        var fullTitle = summaryMatch[1].trim().replace(/\\n|\\,/g, ' '); var dtstart = dtstartMatch[1]; var loc = locMatch ? locMatch[1].trim().substring(0, 25) : '';
+        var eDate = null; var timeStr = ''; var isToday = false; var isTom = false;
 
         if (dtstart.length === 8) {  
-          var y = parseInt(dtstart.substr(0,4), 10);
-          var m = parseInt(dtstart.substr(4,2), 10) - 1;
-          var d = parseInt(dtstart.substr(6,8), 10);
-          eventDate = new Date(y, m, d, 12, 0, 0); 
-          isToday = (y === currentYear && m === currentMonth && d === currentDay);
-          isTomorrow = (y === tomorrowYear && m === tomorrowMonth && d === tomorrowDay);
+          var y1 = parseInt(dtstart.substr(0,4), 10); var m1 = parseInt(dtstart.substr(4,2), 10) - 1; var d1 = parseInt(dtstart.substr(6,8), 10);
+          eDate = new Date(y1, m1, d1, 12, 0, 0); isToday = (y1 === cy && m1 === cm && d1 === cd); isTom = (y1 === ty && m1 === tm && d1 === td);
         } else if (dtstart.indexOf('T') !== -1) {  
-          var parts = dtstart.split('T');
-          var y2 = parseInt(parts[0].substr(0,4), 10);
-          var m2 = parseInt(parts[0].substr(4,2), 10) - 1;
-          var d2 = parseInt(parts[0].substr(6,2), 10);
-          eventDate = new Date(y2, m2, d2);
-          if (parts[1].length >= 4) {
-            timeStr = parts[1].substr(0,2) + ':' + parts[1].substr(2,2);
-          }
-          isToday = (y2 === currentYear && m2 === currentMonth && d2 === currentDay);
-          isTomorrow = (y2 === tomorrowYear && m2 === tomorrowMonth && d2 === tomorrowDay);
+          var p = dtstart.split('T'); var y2 = parseInt(p[0].substr(0,4), 10); var m2 = parseInt(p[0].substr(4,2), 10) - 1; var d2 = parseInt(p[0].substr(6,2), 10);
+          eDate = new Date(y2, m2, d2); if (p[1].length >= 4) timeStr = p[1].substr(0,2) + ':' + p[1].substr(2,2);
+          isToday = (y2 === cy && m2 === cm && d2 === cd); isTom = (y2 === ty && m2 === tm && d2 === td);
         }
-
-        if (!eventDate || isNaN(eventDate.getTime()) || (eventDate < todayStart && !isToday)) continue;
-
-        if (fullTitle.toUpperCase().indexOf('TIEDOTE:') === 0) {
-          if (isToday) alerts.push(fullTitle.substring(8).trim()); 
-          continue; 
-        }
-        
-        events.push({ 
-            date: eventDate, 
-            title: fullTitle.substring(0,60), 
-            time: timeStr,
-            isToday: isToday,
-            isTomorrow: isTomorrow
-        });
+        if (!eDate || isNaN(eDate.getTime()) || (eDate < todayStart && !isToday)) continue;
+        if (fullTitle.toUpperCase().indexOf('TIEDOTE:') === 0) { if (isToday) alerts.push(fullTitle.substring(8).trim()); continue; }
+        events.push({ date: eDate, title: fullTitle.substring(0,50), time: timeStr, location: loc, isToday: isToday, isTomorrow: isTom });
       }
 
       events.sort(function(a, b) { return a.date - b.date; });
 
-      // Ticker
       if (alerts.length > 0) {
         document.getElementById('ticker-container').style.display = 'flex';
-        var baseText = alerts.join(' /// ');
-        var repeatedArr = [];
-        for (var a = 0; a < 8; a++) repeatedArr.push(baseText);
-        document.getElementById('ticker-text').textContent = repeatedArr.join('   ///   ');
+        var baseText = alerts.join(' /// '); var repArr = []; for (var a = 0; a < 8; a++) repArr.push(baseText);
+        document.getElementById('ticker-text').textContent = repArr.join('   ///   ');
       }
 
-      if (events.length === 0) {
-        createSlideHtml('Seuraavat Tapahtumat', '<div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div>');
-        return;
-      }
+      if (events.length === 0) { createSlideHtml('Seuraavat Tapahtumat', '<div class="empty-menu">Ei tulevia tapahtumia tiedossa.</div>'); return; }
 
-      var todayEvents = [];
-      var tomorrowEvents = [];
-      var laterEvents = [];
-
+      var tod = []; var tom = []; var lat = [];
       for (var e = 0; e < events.length; e++) {
-          var ev = events[e];
-          if (ev.isToday) {
-            todayEvents.push(ev);
-          } else if (ev.isTomorrow) {
-            tomorrowEvents.push(ev);
-          } else {
-            ev.dayKey = formatDayKey(ev.date);
-            laterEvents.push(ev);
-          }
+          if (events[e].isToday) tod.push(events[e]); else if (events[e].isTomorrow) tom.push(events[e]); else { events[e].dayKey = formatDayKey(events[e].date); lat.push(events[e]); }
       }
 
-      function renderDayGroup(headerText, dayEventsArr) {
-          if (dayEventsArr.length === 0) return '';
-          var groupHtml = '<div class="cal-day-group"><div class="cal-date-header">' + headerText + '</div>';
-          for (var idx = 0; idx < dayEventsArr.length; idx++) {
-              var evObj = dayEventsArr[idx];
-              var timeDisplay = evObj.time || 'Koko pv';
-              groupHtml += '<div class="cal-event-row"><div class="cal-time">' + timeDisplay + '</div><div class="cal-title">' + evObj.title + '</div></div>';
+      function renderDayGroup(headerText, arr) {
+          if (arr.length === 0) return '';
+          var gHtml = '<div class="cal-day-group"><div class="cal-date-header">' + headerText + '</div>';
+          for (var idx = 0; idx < arr.length; idx++) {
+              var timeDisp = arr[idx].time || 'Koko pv'; var locDisp = arr[idx].location ? ' (' + arr[idx].location + ')' : '';
+              gHtml += '<div class="cal-event-row"><div class="cal-time">' + timeDisp + '</div><div class="cal-title">' + arr[idx].title + locDisp + '</div></div>';
           }
-          return groupHtml + '</div>';
+          return gHtml + '</div>';
       }
 
-      var page1Html = '';
-      if (todayEvents.length > 0) page1Html += renderDayGroup('Tänään', todayEvents);
-      if (tomorrowEvents.length > 0) page1Html += renderDayGroup('Huomenna', tomorrowEvents);
-      
-      if (page1Html !== '') {
-          createSlideHtml('Tapahtumat: Tänään & Huomenna', page1Html);
-      }
+      var p1 = ''; if (tod.length > 0) p1 += renderDayGroup('Tänään', tod); if (tom.length > 0) p1 += renderDayGroup('Huomenna', tom);
+      if (p1 !== '') createSlideHtml('Tapahtumat: Tänään & Huomenna', p1);
 
-      if (laterEvents.length > 0) {
-          var groupedLater = {};
-          var orderOfDays = []; 
-          
-          for (var le = 0; le < laterEvents.length; le++) {
-              var lev = laterEvents[le];
-              if (!groupedLater[lev.dayKey]) {
-                groupedLater[lev.dayKey] = [];
-                orderOfDays.push(lev.dayKey);
-              }
-              groupedLater[lev.dayKey].push(lev);
+      if (lat.length > 0) {
+          var grouped = {}; var order = []; 
+          for (var le = 0; le < lat.length; le++) { if (!grouped[lat[le].dayKey]) { grouped[lat[le].dayKey] = []; order.push(lat[le].dayKey); } grouped[lat[le].dayKey].push(lat[le]); }
+          var cHtml = ''; var rows = 0; var maxS = 2; var sC = 0;
+          for (var dk = 0; dk < order.length; dk++) {
+              if (sC >= maxS) break;
+              var dEvs = grouped[order[dk]]; var rNeed = dEvs.length + 1; 
+              if (rows + rNeed > 14 && cHtml !== '') { createSlideHtml('Seuraavat Tapahtumat', cHtml); sC++; cHtml = ''; rows = 0; if (sC >= maxS) break; }
+              cHtml += renderDayGroup(order[dk], dEvs); rows += rNeed;
           }
-
-          var currentLaterHtml = '';
-          var rowsOnCurrentPage = 0;
-          var MAX_ROWS = 14; 
-          var maxLaterSlides = 2; 
-          var laterSlidesCreated = 0;
-
-          for (var dk = 0; dk < orderOfDays.length; dk++) {
-              var dKey = orderOfDays[dk];
-              var dEvents = groupedLater[dKey];
-              
-              if (laterSlidesCreated >= maxLaterSlides) break;
-
-              var rowsNeeded = dEvents.length + 1; 
-
-              if (rowsOnCurrentPage + rowsNeeded > MAX_ROWS && currentLaterHtml !== '') {
-                  createSlideHtml('Seuraavat Tapahtumat', currentLaterHtml);
-                  laterSlidesCreated++;
-                  currentLaterHtml = '';
-                  rowsOnCurrentPage = 0;
-                  if (laterSlidesCreated >= maxLaterSlides) break;
-              }
-
-              currentLaterHtml += renderDayGroup(dKey, dEvents);
-              rowsOnCurrentPage += rowsNeeded;
-          }
-          
-          if (currentLaterHtml !== '' && laterSlidesCreated < maxLaterSlides) {
-              createSlideHtml('Seuraavat Tapahtumat', currentLaterHtml);
-          }
+          if (cHtml !== '' && sC < maxS) createSlideHtml('Seuraavat Tapahtumat', cHtml);
       }
     }
 
-    // Pääohjelma alkaa: Haetaan kaikki 3 asiaa kerralla vanhaan tyyliin
-    var menuData = null;
-    var calText = null;
-    var gasData = null;
-    var requestsDone = 0;
+    // --- PÄÄOHJELMA JA "NOPEA ALOITUS" ---
+    var menuReady = false;
+    var calReady = false;
 
-    function checkAllDone() {
-      requestsDone++;
-      if (requestsDone === 3) {
-        buildAllAndStart();
-      }
-    }
-
-    function buildAllAndStart() {
-      // 1. Ruokalista
-      if (menuData && !menuData.error) {
-        buildMenuSlides(menuData);
-      } else {
-        createSlideHtml('Päivän Ruokalista', '<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
-      }
-
-      // 2. Kalenteri
-      if (calText) {
-        buildCalendarSlides(calText);
-      } else {
-        createSlideHtml('Tulevat Tapahtumat', '<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
-      }
-
-      // 3. Google Slides
-      var slidesCount = (gasData && gasData.slideCount) ? gasData.slideCount : 5;
-      var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?start=true&loop=false&delayms=' + SLIDE_DURATION + '&rm=minimal';
-      
-      var container = document.getElementById('slides-container');
-      container.insertAdjacentHTML('beforeend', 
-        '<div class="view-slide iframe-wrapper" id="slide-gslides">' +
-          '<iframe src="' + iframeUrl + '" allowfullscreen></iframe>' +
-        '</div>'
-      );
-
-      for (var i = 0; i < slidesCount; i++) {
-        timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION });
-      }
-
-      // 4. Paginointi pallot
+    // Päivittää pallot alareunaan reaaliajassa
+    function updatePagination() {
+      var pagination = document.getElementById('pagination');
       var dotsHtml = '';
       for (var p = 0; p < timeline.length; p++) {
-        dotsHtml += '<div class="dot"></div>';
+        dotsHtml += '<div class="dot ' + (p === currentStep ? 'active' : '') + '"></div>';
       }
-      var pagination = document.getElementById('pagination');
       pagination.innerHTML = dotsHtml;
-      pagination.style.display = 'flex';
+      if (timeline.length > 0) pagination.style.display = 'flex';
+    }
 
-      // Start!
+    function startShow() {
+      if (timeline.length === 0) return; // Jos dataa ei ole tullut, ei tehdä mitään vielä
+      updatePagination();
       playTimeline(0);
+    }
+
+    function checkFastStart() {
+      // Aloita sivu VÄLITTÖMÄSTI kun ruoka ja kalenteri on haettu
+      if (menuReady && calReady) {
+        startShow();
+      }
     }
 
     function playTimeline(index) {
@@ -518,23 +305,29 @@
         window.location.reload();
         return;
       }
+      
       currentStep = index;
       var step = timeline[currentStep];
+
+      // JOS VUOROSSA ON GOOGLE SLIDES
+      if (step.type === 'gslides') {
+        // Luodaan iFrame vasta kun on Google Slidesin vuoro, jotta se lähtee oikeasti pyörimään TÄSTÄ hetkestä!
+        if (!iframeCreated) {
+          var iframeUrl = 'https://docs.google.com/presentation/d/' + SLIDES_ID + '/embed?start=true&loop=false&delayms=' + SLIDE_DURATION + '&rm=minimal';
+          var container = document.getElementById('slides-container');
+          container.insertAdjacentHTML('beforeend', '<div class="view-slide iframe-wrapper" id="slide-gslides"><iframe src="' + iframeUrl + '" allowfullscreen></iframe></div>');
+          iframeCreated = true;
+        }
+      }
 
       var activeSlide = document.querySelector('.view-slide.active');
       if (activeSlide && activeSlide.id !== step.id) {
         activeSlide.classList.remove('active');
       }
-      document.getElementById(step.id).classList.add('active');
+      var nextSlideEl = document.getElementById(step.id);
+      if (nextSlideEl) nextSlideEl.classList.add('active');
 
-      var dots = document.querySelectorAll('.dot');
-      for (var i = 0; i < dots.length; i++) {
-        if (i === currentStep) {
-          dots[i].classList.add('active');
-        } else {
-          dots[i].classList.remove('active');
-        }
-      }
+      updatePagination();
 
       if (timer) clearTimeout(timer);
       timer = setTimeout(function() {
@@ -542,25 +335,40 @@
       }, step.duration);
     }
 
-    // Käynnistä haut (Fallback ajastin 30s jos mikään haku jää jumiin ikuisesti)
-    setTimeout(function() {
-      if (requestsDone < 3) window.location.reload();
-    }, 30000);
-
+    // --- TIETOJEN HAKU ---
+    
+    // 1. Menu (Nopea)
     ajaxGet(WORKER_URL + '/menu', 'json', function(err, data) {
-      menuData = data;
-      checkAllDone();
+      if (data && !data.error) buildMenuSlides(data);
+      else createSlideHtml('Päivän Ruokalista', '<div class="empty-menu">Ruokalistaa ei saatu ladattua.</div>');
+      menuReady = true;
+      checkFastStart();
     });
 
+    // 2. Kalenteri (Nopea)
     ajaxGet(WORKER_URL + '/calendar', 'text', function(err, data) {
-      calText = data;
-      checkAllDone();
+      if (data) buildCalendarSlides(data);
+      else createSlideHtml('Tulevat Tapahtumat', '<div class="empty-menu">Kalenteri ei ole saatavilla.</div>');
+      calReady = true;
+      checkFastStart();
     });
 
+    // 3. GAS (Hidas) - Hakee datan taustalla, lisää sen timelineen lennosta!
     ajaxGet(GAS_SLIDES_URL, 'json', function(err, data) {
-      gasData = data;
-      checkAllDone();
+      var slidesCount = (data && data.slideCount) ? data.slideCount : 5;
+      
+      for (var i = 0; i < slidesCount; i++) {
+        timeline.push({ id: 'slide-gslides', duration: SLIDE_DURATION, type: 'gslides' });
+      }
+      
+      // Päivitä pallot alareunaan, jos show on jo käynnissä
+      updatePagination();
     });
+
+    // Fallback: lataa sivu uusiksi 2 minuutin päästä, jos jokin meni fataalisti jumiin verkossa
+    setTimeout(function() {
+      if (timeline.length === 0) window.location.reload();
+    }, 120000);
 
   </script>
 </body>
